@@ -3,101 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MQ135 Realtime Readings</title>
+<title>MQ135 Secure Dashboard</title>
 
 <style>
 body{
-  background-color:#F5F5F5;
-  font-family:Arial;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#333;
+}
+
+/* ===== LOGIN BOX ===== */
+.login-box{
+  width:320px;
+  margin:120px auto;
+  padding:30px;
+  background:#fff;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+
+input{
+  width:90%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:95%;
+  padding:12px;
+  background:#667eea;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#5563d6;
+}
+
+/* ===== DASHBOARD ===== */
+.dashboard{
+  display:none;
+  padding:20px;
 }
 
 .data-head{
-  margin:auto;
-  width:50%;
   text-align:center;
-  font-size:40px;
+  font-size:36px;
   font-weight:bold;
-  margin-top:40px;
-  padding:20px;
-  background:#FFF;
-  border-radius:15px;
+  color:white;
+  margin-top:20px;
 }
 
 .data-container{
   display:flex;
-  justify-content:space-around;
-  width:50%;
-  margin:40px auto;
-  padding:20px;
-  background:#FFF;
+  justify-content:center;
+  gap:30px;
+  flex-wrap:wrap;
+  margin-top:40px;
+}
+
+.card{
+  background:white;
+  padding:25px;
   border-radius:15px;
+  width:180px;
+  text-align:center;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
-.data-item h2{
-  text-align:center;
-}
-
-.data-item p{
-  font-size:42px;
-  color:#6EB7FF;
-  text-align:center;
+.card p{
+  font-size:32px;
+  color:#667eea;
+  margin:10px 0 0 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="data-head">MQ135 Gas Sensor Realtime</div>
+<!-- 🔐 LOGIN -->
+<div class="login-box" id="loginBox">
+  <h2>MQ135 Login</h2>
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="error" style="color:red;"></p>
+</div>
 
-<div class="data-container">
-  <div class="data-item">
-    <h2>Analog</h2>
-    <p id="analog">0</p>
-  </div>
+<!-- 📊 DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="data-head">MQ135 Gas Sensor Realtime</div>
 
-  <div class="data-item">
-    <h2>Voltage</h2>
-    <p id="voltage">0 V</p>
-  </div>
+  <div class="data-container">
+    <div class="card">
+      <h3>Analog</h3>
+      <p id="analog">0</p>
+    </div>
 
-  <div class="data-item">
-    <h2>Digital</h2>
-    <p id="digital">0</p>
+    <div class="card">
+      <h3>Voltage</h3>
+      <p id="voltage">0 V</p>
+    </div>
+
+    <div class="card">
+      <h3>Digital</h3>
+      <p id="digital">0</p>
+    </div>
   </div>
 </div>
 
-<!-- Firebase v8 ONLY (important) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-/* USE YOUR REAL PROJECT CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
-  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app"
+  apiKey: "YOUR_API_KEY",
+  databaseURL: "YOUR_DATABASE_URL",
 };
 
-// Initialize
 firebase.initializeApp(firebaseConfig);
-var database = firebase.database();
+const auth = firebase.auth();
+const db = firebase.database();
 
-// ===== REFERENCES =====
-var analogRef = database.ref("MQ135/Analog");
-var voltageRef = database.ref("MQ135/Voltage");
-var digitalRef = database.ref("MQ135/Digital");
+// ===== LOGIN FUNCTION =====
+function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-// ===== LIVE UPDATE =====
-analogRef.on("value", function(snapshot){
-  document.getElementById("analog").innerHTML = snapshot.val();
+  auth.signInWithEmailAndPassword(email,password)
+  .catch(e=>{
+    document.getElementById("error").innerText = e.message;
+  });
+}
+
+// ===== AUTH STATE =====
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+    startReading();
+  }
 });
 
-voltageRef.on("value", function(snapshot){
-  document.getElementById("voltage").innerHTML = snapshot.val() + " V";
-});
+// ===== READ DATA =====
+function startReading(){
+  db.ref("MQ135/Analog").on("value",snap=>{
+    document.getElementById("analog").innerHTML = snap.val();
+  });
 
-digitalRef.on("value", function(snapshot){
-  document.getElementById("digital").innerHTML = snapshot.val();
-});
+  db.ref("MQ135/Voltage").on("value",snap=>{
+    document.getElementById("voltage").innerHTML = snap.val()+" V";
+  });
+
+  db.ref("MQ135/Digital").on("value",snap=>{
+    document.getElementById("digital").innerHTML = snap.val();
+  });
+}
 </script>
 
 </body>
