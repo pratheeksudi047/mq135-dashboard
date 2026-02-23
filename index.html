@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MQ135 Realtime Readings</title>
+
+<style>
+body{
+  background-color:#F5F5F5;
+  font-family:Arial;
+}
+
+.data-head{
+  margin:auto;
+  width:50%;
+  text-align:center;
+  font-size:40px;
+  font-weight:bold;
+  margin-top:40px;
+  padding:20px;
+  background:#FFF;
+  border-radius:15px;
+}
+
+.data-container{
+  display:flex;
+  justify-content:space-around;
+  width:50%;
+  margin:40px auto;
+  padding:20px;
+  background:#FFF;
+  border-radius:15px;
+}
+
+.data-item h2{
+  text-align:center;
+}
+
+.data-item p{
+  font-size:42px;
+  color:#6EB7FF;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="data-head">MQ135 Gas Sensor Realtime</div>
+
+<div class="data-container">
+  <div class="data-item">
+    <h2>Analog</h2>
+    <p id="analog">0</p>
+  </div>
+
+  <div class="data-item">
+    <h2>Voltage</h2>
+    <p id="voltage">0 V</p>
+  </div>
+
+  <div class="data-item">
+    <h2>Digital</h2>
+    <p id="digital">0</p>
+  </div>
+</div>
+
+<!-- Firebase v8 ONLY (important) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+/* USE YOUR REAL PROJECT CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
+  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app"
+};
+
+// Initialize
+firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
+
+// ===== REFERENCES =====
+var analogRef = database.ref("MQ135/Analog");
+var voltageRef = database.ref("MQ135/Voltage");
+var digitalRef = database.ref("MQ135/Digital");
+
+// ===== LIVE UPDATE =====
+analogRef.on("value", function(snapshot){
+  document.getElementById("analog").innerHTML = snapshot.val();
+});
+
+voltageRef.on("value", function(snapshot){
+  document.getElementById("voltage").innerHTML = snapshot.val() + " V";
+});
+
+digitalRef.on("value", function(snapshot){
+  document.getElementById("digital").innerHTML = snapshot.val();
+});
+</script>
+
+</body>
+</html>
