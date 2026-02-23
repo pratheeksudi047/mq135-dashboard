@@ -104,17 +104,17 @@ button:hover{
   <div class="data-container">
     <div class="card">
       <h3>Analog</h3>
-      <p id="analog">0</p>
+      <p id="analog">--</p>
     </div>
 
     <div class="card">
       <h3>Voltage</h3>
-      <p id="voltage">0 V</p>
+      <p id="voltage">--</p>
     </div>
 
     <div class="card">
       <h3>Digital</h3>
-      <p id="digital">0</p>
+      <p id="digital">--</p>
     </div>
   </div>
 </div>
@@ -127,19 +127,20 @@ button:hover{
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
-  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// ===== LOGIN FUNCTION =====
+// ===== LOGIN =====
 function login(){
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   auth.signInWithEmailAndPassword(email,password)
+  .then(()=>{ document.getElementById("error").innerText=""; })
   .catch(e=>{
     document.getElementById("error").innerText = e.message;
   });
@@ -154,22 +155,22 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-// ===== READ DATA =====
+// ===== READ FROM CORRECT PATH =====
 function startReading(){
-  db.ref("MQ135/Analog").on("value",snap=>{
-    document.getElementById("analog").innerHTML = snap.val();
+
+  db.ref("esp32/MQ135/Analog").on("value",snap=>{
+    document.getElementById("analog").innerHTML = snap.val() ?? "--";
   });
 
-  db.ref("MQ135/Voltage").on("value",snap=>{
-    document.getElementById("voltage").innerHTML = snap.val()+" V";
+  db.ref("esp32/MQ135/Voltage").on("value",snap=>{
+    document.getElementById("voltage").innerHTML = (snap.val() ?? "--") + " V";
   });
 
-  db.ref("MQ135/Digital").on("value",snap=>{
-    document.getElementById("digital").innerHTML = snap.val();
+  db.ref("esp32/MQ135/Digital").on("value",snap=>{
+    document.getElementById("digital").innerHTML = snap.val() ?? "--";
   });
 }
 </script>
 
 </body>
 </html>
-
