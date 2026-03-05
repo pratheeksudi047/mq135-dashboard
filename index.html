@@ -3,173 +3,219 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MQ135 Secure Dashboard</title>
+<title>Mushroom Farm Dashboard</title>
 
 <style>
+
 body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  color:#333;
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#667eea,#764ba2);
+color:#333;
 }
 
-/* ===== LOGIN BOX ===== */
 .login-box{
-  width:320px;
-  margin:120px auto;
-  padding:30px;
-  background:#fff;
-  border-radius:15px;
-  text-align:center;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+width:320px;
+margin:120px auto;
+padding:30px;
+background:#fff;
+border-radius:15px;
+text-align:center;
 }
 
-input{
-  width:90%;
-  padding:10px;
-  margin:10px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button{
-  width:95%;
-  padding:12px;
-  background:#667eea;
-  color:white;
-  border:none;
-  border-radius:8px;
-  font-size:16px;
-  cursor:pointer;
-}
-
-button:hover{
-  background:#5563d6;
-}
-
-/* ===== DASHBOARD ===== */
 .dashboard{
-  display:none;
-  padding:20px;
-}
-
-.data-head{
-  text-align:center;
-  font-size:36px;
-  font-weight:bold;
-  color:white;
-  margin-top:20px;
-}
-
-.data-container{
-  display:flex;
-  justify-content:center;
-  gap:30px;
-  flex-wrap:wrap;
-  margin-top:40px;
+display:none;
+padding:20px;
 }
 
 .card{
-  background:white;
-  padding:25px;
-  border-radius:15px;
-  width:180px;
-  text-align:center;
-  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+background:white;
+padding:20px;
+border-radius:10px;
+margin:10px;
+width:180px;
+text-align:center;
 }
 
-.card p{
-  font-size:32px;
-  color:#667eea;
-  margin:10px 0 0 0;
+.data-container{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
 }
+
+button{
+padding:10px;
+margin-top:10px;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- 🔐 LOGIN -->
 <div class="login-box" id="loginBox">
-  <h2>MQ135 Login</h2>
-  <input type="email" id="email" placeholder="Email">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <p id="error" style="color:red;"></p>
+<h2>Mushroom Farm Login</h2>
+
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<p id="error"></p>
 </div>
 
-<!-- 📊 DASHBOARD -->
+
 <div class="dashboard" id="dashboard">
-  <div class="data-head">MQ135 Gas Sensor Realtime</div>
 
-  <div class="data-container">
-    <div class="card">
-      <h3>Analog</h3>
-      <p id="analog">--</p>
-    </div>
+<h1 style="text-align:center;color:white;">Farm Environment</h1>
 
-    <div class="card">
-      <h3>Voltage</h3>
-      <p id="voltage">--</p>
-    </div>
+<div class="data-container">
 
-    <div class="card">
-      <h3>Digital</h3>
-      <p id="digital">--</p>
-    </div>
-  </div>
+<div class="card">
+<h3>Temp Inside</h3>
+<p id="temp_in">--</p>
 </div>
 
-<!-- Firebase -->
+<div class="card">
+<h3>Humidity Inside</h3>
+<p id="hum_in">--</p>
+</div>
+
+<div class="card">
+<h3>Temp Outside</h3>
+<p id="temp_out">--</p>
+</div>
+
+<div class="card">
+<h3>Humidity Outside</h3>
+<p id="hum_out">--</p>
+</div>
+
+<div class="card">
+<h3>Light</h3>
+<p id="light">--</p>
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>Motor Control</h3>
+
+<button onclick="motorOn()">ON</button>
+<button onclick="motorOff()">OFF</button>
+
+</div>
+
+
+<div class="card">
+
+<h3>Humidity Limits</h3>
+
+<input id="low" placeholder="Low">
+<input id="high" placeholder="High">
+
+<button onclick="updateLimits()">Update</button>
+
+</div>
+
+</div>
+
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+
 <script>
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
-  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app/"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-// ===== LOGIN =====
-function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  auth.signInWithEmailAndPassword(email,password)
-  .then(()=>{ document.getElementById("error").innerText=""; })
-  .catch(e=>{
-    document.getElementById("error").innerText = e.message;
-  });
+apiKey:"APIKEY",
+databaseURL:"YOUR_DATABASE"
 }
 
-// ===== AUTH STATE =====
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("dashboard").style.display="block";
-    startReading();
-  }
-});
+firebase.initializeApp(firebaseConfig)
 
-// ===== READ FROM CORRECT PATH =====
+const auth=firebase.auth()
+const db=firebase.database()
+
+
+function login(){
+
+let email=document.getElementById("email").value
+let password=document.getElementById("password").value
+
+auth.signInWithEmailAndPassword(email,password)
+
+.catch(e=>{
+document.getElementById("error").innerText=e.message
+})
+
+}
+
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+loginBox.style.display="none"
+dashboard.style.display="block"
+
+startReading()
+
+}
+
+})
+
+
 function startReading(){
 
-  db.ref("esp32/MQ135/Analog").on("value",snap=>{
-    document.getElementById("analog").innerHTML = snap.val() ?? "--";
-  });
+db.ref("esp32/sensors/temp_inside").on("value",s=>{
+temp_in.innerHTML=s.val()
+})
 
-  db.ref("esp32/MQ135/Voltage").on("value",snap=>{
-    document.getElementById("voltage").innerHTML = (snap.val() ?? "--") + " V";
-  });
+db.ref("esp32/sensors/humidity_inside").on("value",s=>{
+hum_in.innerHTML=s.val()
+})
 
-  db.ref("esp32/MQ135/Digital").on("value",snap=>{
-    document.getElementById("digital").innerHTML = snap.val() ?? "--";
-  });
+db.ref("esp32/sensors/temp_outside").on("value",s=>{
+temp_out.innerHTML=s.val()
+})
+
+db.ref("esp32/sensors/humidity_outside").on("value",s=>{
+hum_out.innerHTML=s.val()
+})
+
+db.ref("esp32/sensors/light").on("value",s=>{
+light.innerHTML=s.val()
+})
+
 }
+
+
+function motorOn(){
+
+db.ref("esp32/control/motor_status").set(1)
+
+}
+
+function motorOff(){
+
+db.ref("esp32/control/motor_status").set(0)
+
+}
+
+function updateLimits(){
+
+let low=document.getElementById("low").value
+let high=document.getElementById("high").value
+
+db.ref("esp32/control/humidity_low").set(parseFloat(low))
+db.ref("esp32/control/humidity_high").set(parseFloat(high))
+
+}
+
 </script>
 
 </body>
