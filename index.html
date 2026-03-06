@@ -5,825 +5,419 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mushroom Farm Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg:        #0a0f0d;
-    --panel:     #111a14;
-    --border:    #1e3327;
-    --accent:    #39ff8f;
-    --accent2:   #00c9ff;
-    --warn:      #ffb800;
-    --danger:    #ff4444;
-    --text:      #c8e6c9;
-    --muted:     #4a7a5a;
-    --font-ui:   'Syne', sans-serif;
-    --font-mono: 'Share Tech Mono', monospace;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-ui);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-  }
-
-  /* ══ LOGIN ══════════════════════════════════════════════ */
-
-  #loginBox {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    background: var(--bg);
-  }
-
-  .login-card {
-    width: 360px;
-    padding: 48px 40px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-top: 3px solid var(--accent);
-  }
-
-  .login-card h2 {
-    font-size: 1.1rem;
-    font-weight: 800;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .login-card p.sub {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--muted);
-    margin-bottom: 36px;
-  }
-
-  .field { margin-bottom: 16px; }
-
-  .field label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.15em;
-    color: var(--muted);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-  }
-
-  .field input {
-    width: 100%;
-    padding: 10px 14px;
-    background: #0d1810;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .field input:focus { border-color: var(--accent); }
-
-  .btn-primary {
-    width: 100%;
-    padding: 12px;
-    background: var(--accent);
-    color: #0a0f0d;
-    border: none;
-    font-family: var(--font-ui);
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.2s;
-  }
-
-  .btn-primary:hover { opacity: 0.85; }
-
-  #loginError {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--danger);
-    margin-top: 14px;
-    min-height: 18px;
-  }
-
-  /* ══ DASHBOARD ══════════════════════════════════════════ */
-
-  #dashboard {
-    display: none;
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 20px 60px;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    margin-bottom: 40px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .topbar h1 { font-size: 2rem; font-weight: 800; line-height: 1; color: #fff; }
-  .topbar h1 span { color: var(--accent); }
-
-  .topbar .ts {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-align: right;
-  }
-
-  #wifiStatus {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--danger);
-    margin-right: 6px;
-    vertical-align: middle;
-    transition: background 0.4s;
-  }
-
-  #wifiStatus.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 14px;
-    margin-top: 36px;
-  }
-
-  .sensor-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 12px;
-  }
-
-  .s-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 20px 18px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.3s;
-  }
-
-  .s-card:hover { border-color: var(--accent); }
-
-  .s-card::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
-  }
-
-  .s-card:hover::after { transform: scaleX(1); }
-
-  .s-card .label {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .s-card .value { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; }
-  .s-card .unit  { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); margin-top: 4px; }
-
-  .s-card.warn  { border-color: var(--warn); }
-  .s-card.alert { border-color: var(--danger); }
-
-  /* motor banner */
-  .motor-banner {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 18px 24px;
-    margin-top: 14px;
-  }
-
-  .motor-dot {
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--muted);
-    flex-shrink: 0;
-    transition: background 0.3s, box-shadow 0.3s;
-  }
-
-  .motor-dot.on {
-    background: var(--accent);
-    box-shadow: 0 0 12px var(--accent);
-    animation: pulse 1.4s infinite;
-  }
-
-  @keyframes pulse {
-    0%,100% { box-shadow: 0 0 6px var(--accent); }
-    50%      { box-shadow: 0 0 18px var(--accent); }
-  }
-
-  .motor-label { font-weight: 600; font-size: 0.95rem; color: #fff; }
-  .motor-sub   { font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
-
-  /* ══ WATER TANK GRAPHIC ══════════════════════════════════ */
-
-  .tank-section {
-    display: flex;
-    gap: 32px;
-    align-items: flex-start;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-
-  .tank-graphic-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .tank-graphic-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  /* outer tank shell */
-  .tank-shell {
-    width: 110px;
-    height: 200px;
-    border: 3px solid var(--border);
-    border-radius: 6px 6px 10px 10px;
-    position: relative;
-    overflow: hidden;
-    background: #0a1410;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 1px #0d1f17;
-  }
-
-  /* animated water fill */
-  .tank-water {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    background: linear-gradient(180deg, rgba(0,201,255,0.55) 0%, rgba(0,100,180,0.8) 100%);
-    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    height: 0%;
-  }
-
-  /* water ripple on top */
-  .tank-water::before {
-    content: '';
-    position: absolute;
-    top: -6px; left: -20px; right: -20px;
-    height: 12px;
-    background: radial-gradient(ellipse at 50% 100%, rgba(0,201,255,0.6) 0%, transparent 70%);
-    animation: ripple 2.5s ease-in-out infinite;
-  }
-
-  @keyframes ripple {
-    0%,100% { transform: translateX(0px) scaleY(1); }
-    50%      { transform: translateX(6px) scaleY(1.3); }
-  }
-
-  /* sensor marker lines */
-  .sensor-line {
-    position: absolute;
-    left: 0; right: 0;
-    height: 2px;
-    display: flex;
-    align-items: center;
-  }
-
-  .sensor-line-bar {
-    flex: 1;
-    height: 2px;
-    background: repeating-linear-gradient(90deg, currentColor 0px, currentColor 6px, transparent 6px, transparent 10px);
-  }
-
-  .sensor-line-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    border: 2px solid currentColor;
-    margin: 0 4px;
-    flex-shrink: 0;
-    background: var(--bg);
-  }
-
-  .sensor-line.low-line  { bottom: 18%; color: var(--warn); }
-  .sensor-line.full-line { bottom: 82%; color: var(--accent2); }
-
-  /* sensor line labels */
-  .sensor-line-label {
-    position: absolute;
-    right: -88px;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    white-space: nowrap;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  .sensor-line.low-line  .sensor-line-label { color: var(--warn); }
-  .sensor-line.full-line .sensor-line-label { color: var(--accent2); }
-
-  .sensor-line-label .pin-tag {
-    opacity: 0.6;
-    font-size: 0.55rem;
-  }
-
-  /* status badge on tank */
-  .tank-status-badge {
-    position: absolute;
-    top: 8px; left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: bold;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 3px 7px;
-    border-radius: 3px;
-    white-space: nowrap;
-    z-index: 2;
-    transition: all 0.4s;
-    background: rgba(10,15,13,0.85);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  .tank-status-badge.empty  { color: var(--danger); border-color: var(--danger); }
-  .tank-status-badge.low    { color: var(--warn);   border-color: var(--warn); }
-  .tank-status-badge.full   { color: var(--accent); border-color: var(--accent); }
-  .tank-status-badge.ok     { color: var(--accent2);border-color: var(--accent2); }
-
-  /* tank info panel beside graphic */
-  .tank-info {
-    flex: 1;
-    min-width: 200px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-top: 4px;
-  }
-
-  .tank-info-row {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 14px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .tank-info-row .row-label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .tank-info-row .row-label .pin {
-    display: block;
-    font-size: 0.58rem;
-    color: #2a4a3a;
-    margin-top: 2px;
-  }
-
-  .tank-info-row .row-val {
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-
-  .tank-info-row .row-val.empty { color: var(--danger); }
-  .tank-info-row .row-val.full  { color: var(--accent); }
-  .tank-info-row .row-val.ok    { color: var(--accent2); }
-
-  /* MQ row */
-  .mq-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 14px;
-  }
-
-  /* control panels */
-  .control-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 14px;
-  }
-
-  @media(max-width:600px) { .control-grid { grid-template-columns: 1fr; } }
-
-  .ctrl-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 24px;
-  }
-
-  .ctrl-panel h3 {
-    font-size: 0.8rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-
-  .motor-btns { display: flex; gap: 10px; }
-
-  .btn-on, .btn-off, .btn-auto, .btn-update {
-    flex: 1;
-    padding: 11px 0;
-    border: none;
-    font-family: var(--font-ui);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-  }
-
-  .btn-on    { background: var(--accent);  color: #0a0f0d; }
-  .btn-off   { background: var(--danger);  color: #fff; }
-  .btn-auto  { background: transparent; border: 1px solid var(--accent2); color: var(--accent2); flex: 1.3; }
-  .btn-update{ background: var(--accent2); color: #0a0f0d; width: 100%; margin-top: 14px; padding: 11px; }
-
-  .btn-on:hover,.btn-off:hover,.btn-auto:hover,.btn-update:hover { opacity: 0.8; transform: translateY(-1px); }
-
-  .input-row { display: flex; gap: 10px; margin-bottom: 4px; }
-
-  .inp-group { flex: 1; }
-
-  .inp-group label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.15em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .inp-group input {
-    width: 100%;
-    padding: 9px 12px;
-    background: #0d1810;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
-  .inp-group input:focus { border-color: var(--accent2); }
-
-  .inp-desc {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  .ctrl-msg {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--accent);
-    min-height: 18px;
-    margin-top: 10px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .ctrl-msg.show { opacity: 1; }
-
-  .footer {
-    margin-top: 50px;
-    padding-top: 20px;
-    border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--muted);
-    display: flex;
-    justify-content: space-between;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .s-card, .ctrl-panel, .motor-banner, .tank-shell, .tank-info-row {
-    animation: fadeUp 0.5s ease both;
-  }
+:root{--bg:#0a0f0d;--panel:#111a14;--border:#1e3327;--accent:#39ff8f;--accent2:#00c9ff;--warn:#ffb800;--danger:#ff4444;--text:#c8e6c9;--muted:#4a7a5a;--font-ui:'Syne',sans-serif;--font-mono:'Share Tech Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+
+/* LOGIN */
+#loginBox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg)}
+.login-card{width:360px;padding:48px 40px;background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--accent)}
+.login-card h2{font-size:1.1rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.login-card p.sub{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);margin-bottom:36px}
+.field{margin-bottom:16px}
+.field label{display:block;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;text-transform:uppercase}
+.field input{width:100%;padding:10px 14px;background:#0d1810;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:.9rem;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--accent)}
+.btn-primary{width:100%;padding:12px;background:var(--accent);color:#0a0f0d;border:none;font-family:var(--font-ui);font-size:.85rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;margin-top:8px;transition:opacity .2s}
+.btn-primary:hover{opacity:.85}
+#loginError{font-family:var(--font-mono);font-size:.75rem;color:var(--danger);margin-top:14px;min-height:18px}
+
+/* DASHBOARD */
+#dashboard{display:none;position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:32px 20px 60px}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:0}
+.nav-tab{padding:10px 22px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px}
+.topbar h1{font-size:2rem;font-weight:800;line-height:1;color:#fff}
+.topbar h1 span{color:var(--accent)}
+.topbar .ts{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);text-align:right}
+#wifiStatus{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px;vertical-align:middle;transition:background .4s}
+#wifiStatus.online{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+/* SECTION LABEL */
+.section-label{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;margin-top:32px}
+
+/* SENSOR CARDS */
+.sensor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.s-card{background:var(--panel);border:1px solid var(--border);padding:20px 18px;position:relative;overflow:hidden;transition:border-color .3s}
+.s-card:hover{border-color:var(--accent)}
+.s-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .4s ease}
+.s-card:hover::after{transform:scaleX(1)}
+.s-card .label{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.s-card .value{font-size:2rem;font-weight:800;color:#fff;line-height:1}
+.s-card .unit{font-family:var(--font-mono);font-size:.75rem;color:var(--accent);margin-top:4px}
+.s-card.warn{border-color:var(--warn)}.s-card.alert{border-color:var(--danger)}
+
+/* MOTOR */
+.motor-banner{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--border);padding:18px 24px;margin-top:14px}
+.motor-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s,box-shadow .3s}
+.motor-dot.on{background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 18px var(--accent)}}
+.motor-label{font-weight:600;font-size:.95rem;color:#fff}
+.motor-sub{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);margin-top:2px}
+
+/* TANK */
+.tank-section{display:flex;gap:32px;align-items:flex-start;margin-top:14px;flex-wrap:wrap}
+.tank-graphic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
+.tank-graphic-label{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.tank-shell{width:110px;height:200px;border:3px solid var(--border);border-radius:6px 6px 10px 10px;position:relative;overflow:hidden;background:#0a1410;box-shadow:inset 0 0 20px rgba(0,0,0,.5),0 0 0 1px #0d1f17}
+.tank-water{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,rgba(0,201,255,.55) 0%,rgba(0,100,180,.8) 100%);transition:height .8s cubic-bezier(.4,0,.2,1);height:0%}
+.tank-water::before{content:'';position:absolute;top:-6px;left:-20px;right:-20px;height:12px;background:radial-gradient(ellipse at 50% 100%,rgba(0,201,255,.6) 0%,transparent 70%);animation:ripple 2.5s ease-in-out infinite}
+@keyframes ripple{0%,100%{transform:translateX(0)scaleY(1)}50%{transform:translateX(6px)scaleY(1.3)}}
+.sensor-line{position:absolute;left:0;right:0;height:2px;display:flex;align-items:center}
+.sensor-line-bar{flex:1;height:2px;background:repeating-linear-gradient(90deg,currentColor 0,currentColor 6px,transparent 6px,transparent 10px)}
+.sensor-line-dot{width:8px;height:8px;border-radius:50%;border:2px solid currentColor;margin:0 4px;flex-shrink:0;background:var(--bg)}
+.sensor-line.low-line{bottom:18%;color:var(--warn)}.sensor-line.full-line{bottom:82%;color:var(--accent2)}
+.sensor-line-label{position:absolute;right:-88px;font-family:var(--font-mono);font-size:.6rem;white-space:nowrap;display:flex;flex-direction:column;gap:1px}
+.sensor-line.low-line .sensor-line-label{color:var(--warn)}.sensor-line.full-line .sensor-line-label{color:var(--accent2)}
+.sensor-line-label .pin-tag{opacity:.6;font-size:.55rem}
+.tank-status-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:3px;white-space:nowrap;z-index:2;transition:all .4s;background:rgba(10,15,13,.85);color:var(--muted);border:1px solid var(--border)}
+.tank-status-badge.empty{color:var(--danger);border-color:var(--danger)}.tank-status-badge.low{color:var(--warn);border-color:var(--warn)}.tank-status-badge.full{color:var(--accent);border-color:var(--accent)}.tank-status-badge.ok{color:var(--accent2);border-color:var(--accent2)}
+.tank-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.tank-info-row{background:var(--panel);border:1px solid var(--border);padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.tank-info-row .row-label{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tank-info-row .row-label .pin{display:block;font-size:.58rem;color:#2a4a3a;margin-top:2px}
+.tank-info-row .row-val{font-weight:700;font-size:.9rem}
+.tank-info-row .row-val.empty{color:var(--danger)}.tank-info-row .row-val.full{color:var(--accent)}.tank-info-row .row-val.ok{color:var(--accent2)}
+
+/* CONTROLS */
+.control-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media(max-width:600px){.control-grid{grid-template-columns:1fr}}
+.ctrl-panel{background:var(--panel);border:1px solid var(--border);padding:24px}
+.ctrl-panel h3{font-size:.8rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:20px}
+.motor-btns{display:flex;gap:10px}
+.btn-on,.btn-off,.btn-auto,.btn-update,.btn-export{flex:1;padding:11px 0;border:none;font-family:var(--font-ui);font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:opacity .2s,transform .1s}
+.btn-on{background:var(--accent);color:#0a0f0d}.btn-off{background:var(--danger);color:#fff}
+.btn-auto{background:transparent;border:1px solid var(--accent2);color:var(--accent2);flex:1.3}
+.btn-update{background:var(--accent2);color:#0a0f0d;width:100%;margin-top:14px;padding:11px}
+.btn-export{background:#1a2a1e;border:1px solid var(--accent);color:var(--accent);width:auto;padding:9px 18px;flex:none;font-size:.72rem}
+.btn-on:hover,.btn-off:hover,.btn-auto:hover,.btn-update:hover,.btn-export:hover{opacity:.8;transform:translateY(-1px)}
+.input-row{display:flex;gap:10px;margin-bottom:4px}
+.inp-group{flex:1}
+.inp-group label{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.inp-group input,.inp-group select,.inp-group textarea{width:100%;padding:9px 12px;background:#0d1810;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:.85rem;outline:none;transition:border-color .2s}
+.inp-group textarea{resize:vertical;min-height:60px}
+.inp-group input:focus,.inp-group select:focus,.inp-group textarea:focus{border-color:var(--accent2)}
+.inp-desc{font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:6px}
+.ctrl-msg{font-family:var(--font-mono);font-size:.7rem;color:var(--accent);min-height:18px;margin-top:10px;opacity:0;transition:opacity .3s}
+.ctrl-msg.show{opacity:1}
+
+/* MQ */
+.mq-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+
+/* PAGE PANELS */
+.page{display:none}.page.active{display:block}
+
+/* CHART */
+.chart-wrap{background:var(--panel);border:1px solid var(--border);padding:20px;margin-top:12px;position:relative}
+.chart-wrap canvas{max-height:280px}
+.chart-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.chart-toolbar label{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.chart-toolbar input[type=date]{padding:6px 10px;background:#0d1810;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:.8rem;outline:none}
+.chart-toolbar input[type=date]:focus{border-color:var(--accent)}
+
+/* DATA RECORDS TABLE */
+.records-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.72rem;margin-top:12px}
+.records-table th{text-align:left;padding:8px 12px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:400;letter-spacing:.1em;text-transform:uppercase;font-size:.62rem}
+.records-table td{padding:8px 12px;border-bottom:1px solid #0d1810;color:var(--text)}
+.records-table tr:hover td{background:#0d1810}
+.records-table .badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:.6rem;font-weight:700}
+.badge-spawn{background:#1a2a1e;color:var(--accent)}.badge-harvest{background:#1a1a2e;color:var(--accent2)}
+
+/* FORM CARD */
+.form-card{background:var(--panel);border:1px solid var(--border);padding:28px;margin-top:14px}
+.form-card h3{font-size:.85rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:var(--accent2);margin-bottom:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.form-actions{display:flex;gap:10px;margin-top:16px}
+
+/* FOOTER */
+.footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:.65rem;color:var(--muted);display:flex;justify-content:space-between}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.s-card,.ctrl-panel,.motor-banner,.tank-shell,.tank-info-row,.chart-wrap,.form-card{animation:fadeUp .5s ease both}
 </style>
 </head>
 <body>
 
-<!-- ══ LOGIN ═══════════════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="loginBox">
   <div class="login-card">
     <h2>🍄 Mushroom Farm</h2>
     <p class="sub">// secure device access terminal</p>
-
-    <div class="field">
-      <label>Email</label>
-      <input type="email" id="email" placeholder="user@example.com">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="password" placeholder="••••••••">
-    </div>
-
+    <div class="field"><label>Email</label><input type="email" id="email" placeholder="user@example.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="password" placeholder="••••••••"></div>
     <button class="btn-primary" onclick="login()">Authenticate</button>
     <div id="loginError"></div>
   </div>
 </div>
 
-<!-- ══ DASHBOARD ════════════════════════════════════════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard">
 
   <div class="topbar">
-    <div>
-      <h1>Farm <span>Monitor</span></h1>
-    </div>
+    <div><h1>Farm <span>Monitor</span></h1></div>
     <div class="ts">
       <span id="wifiStatus"></span><span id="wifiLabel">offline</span><br>
       Last update: <span id="lastUpdate">--</span>
     </div>
   </div>
 
-  <!-- INSIDE -->
-  <div class="section-label">// inside environment</div>
-  <div class="sensor-grid">
-    <div class="s-card" id="card_tempIn">
-      <div class="label">Temperature · Inside</div>
-      <div class="value" id="val_tempIn">--</div>
-      <div class="unit">°C</div>
-    </div>
-    <div class="s-card" id="card_humIn">
-      <div class="label">Humidity · Inside</div>
-      <div class="value" id="val_humIn">--</div>
-      <div class="unit">% RH</div>
-    </div>
-    <div class="s-card" id="card_lux">
-      <div class="label">Light Level</div>
-      <div class="value" id="val_lux">--</div>
-      <div class="unit">lux</div>
-    </div>
+  <!-- NAV -->
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('live')">Live</button>
+    <button class="nav-tab" onclick="showPage('production')">Production Data</button>
+    <button class="nav-tab" onclick="showPage('batch')">Batch Info</button>
+    <button class="nav-tab" onclick="showPage('harvest')">Harvest Log</button>
+    <button class="nav-tab" onclick="showPage('settings')">Settings</button>
   </div>
 
-  <!-- OUTSIDE -->
-  <div class="section-label">// outside environment</div>
-  <div class="sensor-grid">
-    <div class="s-card" id="card_tempOut">
-      <div class="label">Temperature · Outside</div>
-      <div class="value" id="val_tempOut">--</div>
-      <div class="unit">°C</div>
+  <!-- ══ PAGE: LIVE ══════════════════════════════════════ -->
+  <div class="page active" id="page-live">
+
+    <div class="section-label">// inside environment</div>
+    <div class="sensor-grid">
+      <div class="s-card" id="card_tempIn"><div class="label">Temp · Inside</div><div class="value" id="val_tempIn">--</div><div class="unit">°C</div></div>
+      <div class="s-card" id="card_humIn"><div class="label">Humidity · Inside</div><div class="value" id="val_humIn">--</div><div class="unit">% RH</div></div>
+      <div class="s-card"><div class="label">Light Level</div><div class="value" id="val_lux">--</div><div class="unit">lux</div></div>
     </div>
-    <div class="s-card" id="card_humOut">
-      <div class="label">Humidity · Outside</div>
-      <div class="value" id="val_humOut">--</div>
-      <div class="unit">% RH</div>
+
+    <div class="section-label">// outside environment</div>
+    <div class="sensor-grid">
+      <div class="s-card" id="card_tempOut"><div class="label">Temp · Outside</div><div class="value" id="val_tempOut">--</div><div class="unit">°C</div></div>
+      <div class="s-card"><div class="label">Humidity · Outside</div><div class="value" id="val_humOut">--</div><div class="unit">% RH</div></div>
     </div>
-  </div>
 
-  <!-- MQ135 -->
-  <div class="section-label">// air quality · MQ135</div>
-  <div class="mq-row">
-    <div class="s-card">
-      <div class="label">CO₂ / Air · Inside</div>
-      <div class="value" id="val_mqIn">--</div>
-      <div class="unit">raw ADC</div>
+    <div class="section-label">// air quality · MQ135</div>
+    <div class="mq-row">
+      <div class="s-card"><div class="label">CO₂ · Inside</div><div class="value" id="val_mqIn">--</div><div class="unit">raw ADC</div></div>
+      <div class="s-card"><div class="label">CO₂ · Outside</div><div class="value" id="val_mqOut">--</div><div class="unit">raw ADC</div></div>
     </div>
-    <div class="s-card">
-      <div class="label">CO₂ / Air · Outside</div>
-      <div class="value" id="val_mqOut">--</div>
-      <div class="unit">raw ADC</div>
+
+    <div class="section-label">// humidifier & water tank</div>
+    <div class="motor-banner">
+      <div class="motor-dot" id="motorDot"></div>
+      <div>
+        <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
+        <div class="motor-sub">auto mode · relay active-low · pin 25</div>
+      </div>
     </div>
-  </div>
 
-  <!-- MOTOR + TANK -->
-  <div class="section-label">// humidifier & water tank</div>
-
-  <div class="motor-banner">
-    <div class="motor-dot" id="motorDot"></div>
-    <div>
-      <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
-      <div class="motor-sub">auto mode · relay active-low · pin 25</div>
-    </div>
-  </div>
-
-  <!-- WATER TANK GRAPHIC -->
-  <div class="tank-section" style="margin-top:20px;">
-
-    <div class="tank-graphic-wrap">
-      <div class="tank-graphic-label">Water Tank</div>
-
-      <div style="position:relative; padding-right: 90px;">
-        <div class="tank-shell">
-          <div class="tank-water" id="tankWater"></div>
-
-          <!-- FULL sensor line — top ~82% from bottom -->
-          <div class="sensor-line full-line">
-            <div class="sensor-line-bar"></div>
-            <div class="sensor-line-dot"></div>
-            <div class="sensor-line-label">
-              FULL SENSOR
-              <span class="pin-tag">Pin 33</span>
-            </div>
+    <div class="tank-section" style="margin-top:20px;">
+      <div class="tank-graphic-wrap">
+        <div class="tank-graphic-label">Water Tank</div>
+        <div style="position:relative;padding-right:90px;">
+          <div class="tank-shell">
+            <div class="tank-water" id="tankWater"></div>
+            <div class="sensor-line full-line"><div class="sensor-line-bar"></div><div class="sensor-line-dot"></div><div class="sensor-line-label">FULL SENSOR<span class="pin-tag">Pin 33</span></div></div>
+            <div class="sensor-line low-line"><div class="sensor-line-bar"></div><div class="sensor-line-dot"></div><div class="sensor-line-label">LOW SENSOR<span class="pin-tag">Pin 32</span></div></div>
+            <div class="tank-status-badge" id="tankBadge">--</div>
           </div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--muted);text-align:center;">⬆ pump inlet · submerged</div>
+      </div>
+      <div class="tank-info">
+        <div class="tank-info-row"><div class="row-label">Low Sensor<span class="pin">Pin 32 — bottom</span></div><div class="row-val" id="info_tankLow">--</div></div>
+        <div class="tank-info-row"><div class="row-label">Full Sensor<span class="pin">Pin 33 — top</span></div><div class="row-val" id="info_tankFull">--</div></div>
+        <div class="tank-info-row"><div class="row-label">Tank Status</div><div class="row-val" id="info_tankStatus">--</div></div>
+        <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);padding:10px 4px;line-height:1.7;">YES = EMPTY at that sensor · NO = water present</div>
+      </div>
+    </div>
 
-          <!-- LOW sensor line — bottom ~18% from bottom -->
-          <div class="sensor-line low-line">
-            <div class="sensor-line-bar"></div>
-            <div class="sensor-line-dot"></div>
-            <div class="sensor-line-label">
-              LOW SENSOR
-              <span class="pin-tag">Pin 32</span>
-            </div>
+  </div><!-- end live -->
+
+  <!-- ══ PAGE: PRODUCTION DATA ═══════════════════════════ -->
+  <div class="page" id="page-production">
+
+    <div class="section-label">// 24-hour production charts</div>
+
+    <div class="chart-toolbar">
+      <label>Select Date</label>
+      <input type="date" id="chartDate">
+      <button class="btn-export" onclick="loadChartData()">Load</button>
+      <button class="btn-export" onclick="exportProductionCSV()">⬇ Export CSV</button>
+    </div>
+
+    <div class="chart-wrap">
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">TEMPERATURE (°C)</div>
+      <canvas id="chartTemp"></canvas>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:12px;">
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">HUMIDITY (% RH)</div>
+      <canvas id="chartHum"></canvas>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:12px;">
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">MQ135 AIR QUALITY (raw ADC)</div>
+      <canvas id="chartMQ"></canvas>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:12px;">
+      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">LIGHT (lux) & HUMIDIFIER ON TIME (s per 15min)</div>
+      <canvas id="chartLux"></canvas>
+    </div>
+
+  </div><!-- end production -->
+
+  <!-- ══ PAGE: BATCH INFO ════════════════════════════════ -->
+  <div class="page" id="page-batch">
+
+    <div class="section-label">// add new batch</div>
+    <div class="form-card">
+      <h3>New Batch Entry</h3>
+      <div class="form-row">
+        <div class="inp-group"><label>Batch ID</label><input type="text" id="b_id" placeholder="e.g. BATCH-001"></div>
+        <div class="inp-group"><label>Spawn Type</label><input type="text" id="b_spawn" placeholder="e.g. Oyster, Shiitake"></div>
+      </div>
+      <div class="form-row">
+        <div class="inp-group"><label>Substrate</label><input type="text" id="b_substrate" placeholder="e.g. Straw, Sawdust"></div>
+        <div class="inp-group"><label>Spawn Date</label><input type="date" id="b_date"></div>
+      </div>
+      <div class="form-row">
+        <div class="inp-group"><label>Number of Bags</label><input type="number" id="b_bags" placeholder="e.g. 20" min="1"></div>
+      </div>
+      <div class="inp-group"><label>Notes</label><textarea id="b_notes" placeholder="Any additional notes..."></textarea></div>
+      <div class="form-actions">
+        <button class="btn-update" style="flex:none;width:160px;" onclick="saveBatch()">Save Batch</button>
+      </div>
+      <div id="batchMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
+    </div>
+
+    <div class="section-label">// batch records</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <button class="btn-export" onclick="exportBatchCSV()">⬇ Export Batch CSV</button>
+    </div>
+    <table class="records-table">
+      <thead><tr><th>Batch ID</th><th>Spawn Type</th><th>Substrate</th><th>Spawn Date</th><th>Bags</th><th>Notes</th></tr></thead>
+      <tbody id="batchTableBody"></tbody>
+    </table>
+
+  </div><!-- end batch -->
+
+  <!-- ══ PAGE: HARVEST LOG ═══════════════════════════════ -->
+  <div class="page" id="page-harvest">
+
+    <div class="section-label">// add harvest record</div>
+    <div class="form-card">
+      <h3>New Harvest Entry</h3>
+      <div class="form-row">
+        <div class="inp-group"><label>Link to Batch ID</label><input type="text" id="h_batchId" placeholder="e.g. BATCH-001"></div>
+        <div class="inp-group"><label>Flush Number</label><input type="number" id="h_flush" placeholder="1" min="1"></div>
+      </div>
+      <div class="form-row">
+        <div class="inp-group"><label>Harvest Date</label><input type="date" id="h_date"></div>
+        <div class="inp-group"><label>Yield (grams)</label><input type="number" id="h_yield" placeholder="e.g. 450" min="0"></div>
+      </div>
+      <div class="inp-group"><label>Notes</label><textarea id="h_notes" placeholder="Quality, observations..."></textarea></div>
+      <div class="form-actions">
+        <button class="btn-update" style="flex:none;width:180px;" onclick="saveHarvest()">Save Harvest</button>
+      </div>
+      <div id="harvestMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
+    </div>
+
+    <div class="section-label">// harvest records</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
+      <button class="btn-export" onclick="exportHarvestCSV()">⬇ Export Harvest CSV</button>
+    </div>
+    <table class="records-table">
+      <thead><tr><th>Batch ID</th><th>Flush</th><th>Harvest Date</th><th>Yield (g)</th><th>Notes</th></tr></thead>
+      <tbody id="harvestTableBody"></tbody>
+    </table>
+
+  </div><!-- end harvest -->
+
+  <!-- ══ PAGE: SETTINGS ══════════════════════════════════ -->
+  <div class="page" id="page-settings">
+
+    <div class="section-label">// remote control</div>
+    <div class="control-grid">
+      <div class="ctrl-panel">
+        <h3>Motor Override</h3>
+        <div class="motor-btns">
+          <button class="btn-on" onclick="motorOn()">ON</button>
+          <button class="btn-off" onclick="motorOff()">OFF</button>
+          <button class="btn-auto" onclick="motorAuto()">Auto</button>
+        </div>
+        <div id="ctrlMsg" class="ctrl-msg"></div>
+      </div>
+      <div class="ctrl-panel">
+        <h3>Humidity Limits</h3>
+        <div class="input-row">
+          <div class="inp-group"><label>Low (%)</label><input type="number" id="inp_humLow" placeholder="85" step="0.5"></div>
+          <div class="inp-group"><label>High (%)</label><input type="number" id="inp_humHigh" placeholder="92" step="0.5"></div>
+        </div>
+        <button class="btn-update" onclick="updateLimits()">Update Limits</button>
+        <div id="limMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
+      </div>
+    </div>
+
+    <div class="section-label">// motor timing controls</div>
+    <div class="control-grid">
+      <div class="ctrl-panel">
+        <h3>Run &amp; Off Times</h3>
+        <div class="input-row">
+          <div class="inp-group">
+            <label>Min Run (s)</label>
+            <input type="number" id="inp_minRun" placeholder="60" min="1" step="1">
+            <p class="inp-desc">Motor must run at least this long before it can turn off.</p>
           </div>
-
-          <div class="tank-status-badge" id="tankBadge">--</div>
+          <div class="inp-group">
+            <label>Min Off (s)</label>
+            <input type="number" id="inp_minOff" placeholder="120" min="1" step="1">
+            <p class="inp-desc">Motor must rest at least this long between cycles.</p>
+          </div>
         </div>
+        <button class="btn-update" onclick="updateTiming()">Update Timing</button>
+        <div id="timMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
       </div>
-
-      <!-- pump icon at bottom -->
-      <div style="font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-align:center;">
-        ⬆ pump inlet · submerged
+      <div class="ctrl-panel">
+        <h3>Safety Cutoff</h3>
+        <div class="input-row">
+          <div class="inp-group"><label>Max Run (s)</label><input type="number" id="inp_maxRun" placeholder="600" min="1" step="1"></div>
+        </div>
+        <p class="inp-desc" style="margin-top:8px;">Motor is force-stopped after this duration regardless of humidity.</p>
+        <button class="btn-update" onclick="updateMaxRun()">Update Cutoff</button>
+        <div id="maxMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
       </div>
     </div>
 
-    <!-- INFO PANEL -->
-    <div class="tank-info">
-
-      <div class="tank-info-row">
-        <div class="row-label">
-          Low Sensor
-          <span class="pin">Pin 32 — bottom of tank</span>
-        </div>
-        <div class="row-val" id="info_tankLow">--</div>
-      </div>
-
-      <div class="tank-info-row">
-        <div class="row-label">
-          Full Sensor
-          <span class="pin">Pin 33 — top of tank</span>
-        </div>
-        <div class="row-val" id="info_tankFull">--</div>
-      </div>
-
-      <div class="tank-info-row">
-        <div class="row-label">Tank Status</div>
-        <div class="row-val" id="info_tankStatus">--</div>
-      </div>
-
-      <div style="font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);padding:10px 4px;line-height:1.7;">
-        Both sensors: <b style="color:var(--text)">YES = EMPTY</b> · <b style="color:var(--text)">NO = has water at that level</b><br>
-        Motor is force-stopped when Low=YES and Full=NO (tank empty).
-      </div>
-
-    </div>
-  </div>
-
-  <!-- CONTROLS -->
-  <div class="section-label">// remote control</div>
-  <div class="control-grid">
-
-    <div class="ctrl-panel">
-      <h3>Motor Override</h3>
-      <div class="motor-btns">
-        <button class="btn-on"  onclick="motorOn()">ON</button>
-        <button class="btn-off" onclick="motorOff()">OFF</button>
-        <button class="btn-auto" onclick="motorAuto()">Auto</button>
-      </div>
-      <div id="ctrlMsg" class="ctrl-msg"></div>
-    </div>
-
-    <div class="ctrl-panel">
-      <h3>Humidity Limits</h3>
-      <div class="input-row">
-        <div class="inp-group">
-          <label>Low (%)</label>
-          <input type="number" id="inp_humLow" placeholder="85" step="0.5">
-        </div>
-        <div class="inp-group">
-          <label>High (%)</label>
-          <input type="number" id="inp_humHigh" placeholder="92" step="0.5">
-        </div>
-      </div>
-      <button class="btn-update" onclick="updateLimits()">Update Limits</button>
-      <div id="limMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
-    </div>
-
-  </div>
-
-  <div class="section-label">// motor timing controls</div>
-  <div class="control-grid">
-
-    <div class="ctrl-panel">
-      <h3>Run &amp; Off Times</h3>
-      <div class="input-row">
-        <div class="inp-group">
-          <label>Min Run (s)</label>
-          <input type="number" id="inp_minRun" placeholder="60" min="1" step="1">
-          <p class="inp-desc">Motor must run at least this long before it is allowed to turn off, even if humidity is reached.</p>
-        </div>
-        <div class="inp-group">
-          <label>Min Off (s)</label>
-          <input type="number" id="inp_minOff" placeholder="120" min="1" step="1">
-          <p class="inp-desc">Motor must stay off at least this long between cycles to prevent rapid switching.</p>
-        </div>
-      </div>
-      <button class="btn-update" onclick="updateTiming()">Update Timing</button>
-      <div id="timMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
-    </div>
-
-    <div class="ctrl-panel">
-      <h3>Safety Cutoff</h3>
-      <div class="input-row">
-        <div class="inp-group">
-          <label>Max Run (s)</label>
-          <input type="number" id="inp_maxRun" placeholder="600" min="1" step="1">
-        </div>
-      </div>
-      <p class="inp-desc" style="margin-top:8px;">Motor is force-stopped after this duration regardless of humidity. Prevents flooding if sensor fails.</p>
-      <button class="btn-update" onclick="updateMaxRun()">Update Cutoff</button>
-      <div id="maxMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
-    </div>
-
-  </div>
+  </div><!-- end settings -->
 
   <div class="footer">
     <span>esp32 · mushroom-farm-dd30b · asia-southeast1</span>
     <span id="footerTime"></span>
   </div>
 
-</div>
+</div><!-- end dashboard -->
 
-<!-- Firebase SDK v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-
 const firebaseConfig = {
   apiKey:      "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
   databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app/"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.database();
 
-/* ── Login ── */
+/* ── LOGIN ── */
 function login() {
-  const email    = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("password").value;
   document.getElementById("loginError").innerText = "";
-  auth.signInWithEmailAndPassword(email, password)
+  auth.signInWithEmailAndPassword(email, pass)
     .catch(e => { document.getElementById("loginError").innerText = e.message; });
 }
 
@@ -832,143 +426,49 @@ auth.onAuthStateChanged(user => {
     document.getElementById("loginBox").style.display  = "none";
     document.getElementById("dashboard").style.display = "block";
     startListeners();
+    loadBatchTable();
+    loadHarvestTable();
+    setTodayDate();
     clockTick();
   }
 });
 
-/* ── Tank state ── */
-let tankLowVal  = false;
-let tankFullVal = false;
+/* ── TANK STATE ── */
+let tankLowVal = false, tankFullVal = false;
 
 function updateTankGraphic() {
-  /*
-    BOTH sensors: YES (true) = EMPTY at that point, NO (false) = water present at that point
-    Low sensor (Pin 32)  — placed at the BOTTOM just above pump inlet
-    Full sensor (Pin 33) — placed at the TOP
+  let fillPct=10, statusText="--", badgeClass="", lowClass="ok", fullClass="ok", statusClass="";
+  const lowText  = tankLowVal  ? "EMPTY at sensor" : "Water present";
+  const fullText = tankFullVal ? "EMPTY at sensor" : "Water present";
+  const lc = tankLowVal  ? "empty" : "ok";
+  const fc = tankFullVal ? "empty" : "full";
 
-    Possible combinations:
-    Low=NO,  Full=NO  → water above low sensor, below full → MID LEVEL  (~50% fill)
-    Low=NO,  Full=YES → low sensor dry, full sensor also dry? shouldn't happen normally → UNKNOWN
-    Low=YES, Full=NO  → BOTH sensors detect no water → EMPTY (critical)
-    Low=YES, Full=YES → water reached full sensor (top) but also low sensor triggered?
-                        This is your reported issue — likely float stuck.
-                        We show FULL since full sensor YES = full.
-
-    Simplified water level mapping:
-    Low=NO,  Full=NO  → water is between low and full markers → ~50%
-    Low=NO,  Full=YES → full = water is at or above top       → 100% (FULL)  [note: YES=EMPTY per user, so this means EMPTY at full = no water at top AND no water at bottom? Rechecking...]
-
-    USER CLARIFIED:
-    YES = EMPTY (sensor is in air / no water at that point)
-    NO  = water is present at that sensor point
-
-    So:
-    Low=NO,  Full=NO  → water at bottom AND at top → FULL (100%)
-    Low=NO,  Full=YES → water at bottom, not at top → MID (~50%)
-    Low=YES, Full=NO  → no water at bottom... but water at top? physically impossible → ERROR/STUCK SENSOR
-    Low=YES, Full=YES → no water at bottom, no water at top → EMPTY (0%)
-  */
-
-  let fillPct   = 10;   // default low
-  let statusText = "--";
-  let badgeClass = "";
-  let lowText    = tankLowVal  ? "EMPTY at sensor" : "Water present";
-  let fullText   = tankFullVal ? "EMPTY at sensor" : "Water present";
-  let lowClass   = tankLowVal  ? "empty" : "ok";
-  let fullClass  = tankFullVal ? "empty" : "full";
-  let statusClass = "";
-
-  if(!tankLowVal && !tankFullVal) {
-    // Water present at BOTH sensors → FULL
-    fillPct     = 95;
-    statusText  = "TANK FULL";
-    badgeClass  = "full";
-    statusClass = "full";
-  } else if(!tankLowVal && tankFullVal) {
-    // Water at bottom, not at top → MID
-    fillPct     = 50;
-    statusText  = "MID LEVEL";
-    badgeClass  = "ok";
-    statusClass = "ok";
-  } else if(tankLowVal && tankFullVal) {
-    // No water at either sensor → EMPTY
-    fillPct     = 5;
-    statusText  = "⚠ EMPTY";
-    badgeClass  = "empty";
-    statusClass = "empty";
-  } else {
-    // Low=YES Full=NO → physically impossible, sensor fault
-    fillPct     = 10;
-    statusText  = "SENSOR FAULT";
-    badgeClass  = "low";
-    statusClass = "low";
-  }
+  if(!tankLowVal && !tankFullVal)      { fillPct=95; statusText="TANK FULL";    badgeClass="full";  statusClass="full"; }
+  else if(!tankLowVal && tankFullVal)  { fillPct=50; statusText="MID LEVEL";    badgeClass="ok";    statusClass="ok"; }
+  else if(tankLowVal  && tankFullVal)  { fillPct=5;  statusText="⚠ EMPTY";      badgeClass="empty"; statusClass="empty"; }
+  else                                  { fillPct=10; statusText="SENSOR FAULT"; badgeClass="low";   statusClass="low"; }
 
   document.getElementById("tankWater").style.height = fillPct + "%";
-
   const badge = document.getElementById("tankBadge");
   badge.className = "tank-status-badge " + badgeClass;
   badge.innerText = statusText;
-
-  const infoLow  = document.getElementById("info_tankLow");
-  infoLow.innerText  = lowText;
-  infoLow.className  = "row-val " + lowClass;
-
-  const infoFull = document.getElementById("info_tankFull");
-  infoFull.innerText = fullText;
-  infoFull.className = "row-val " + fullClass;
-
-  const infoStatus = document.getElementById("info_tankStatus");
-  infoStatus.innerText = statusText;
-  infoStatus.className = "row-val " + statusClass;
+  const il = document.getElementById("info_tankLow");   il.innerText = lowText;  il.className = "row-val " + lc;
+  const iF = document.getElementById("info_tankFull");  iF.innerText = fullText; iF.className = "row-val " + fc;
+  const is = document.getElementById("info_tankStatus");is.innerText = statusText;is.className = "row-val " + statusClass;
 }
 
-/* ── Listeners ── */
+/* ── LIVE LISTENERS ── */
 function startListeners() {
+  db.ref("esp32/SHT30/Temperature").on("value", s => { const v=s.val(); setText("val_tempIn",  v!==null?v.toFixed(1):"--"); flagCard("card_tempIn",v,15,35); markUpdate(); });
+  db.ref("esp32/SHT30/Humidity").on("value",    s => { const v=s.val(); setText("val_humIn",   v!==null?v.toFixed(1):"--"); flagCard("card_humIn",v,80,95);  markUpdate(); });
+  db.ref("esp32/SHT30_Outside/Temperature").on("value", s => { const v=s.val(); setText("val_tempOut", v!==null?v.toFixed(1):"--"); flagCard("card_tempOut",v,10,40); });
+  db.ref("esp32/SHT30_Outside/Humidity").on("value",    s => { const v=s.val(); setText("val_humOut",  v!==null?v.toFixed(1):"--"); });
+  db.ref("esp32/LUX").on("value",           s => { const v=s.val(); setText("val_lux",   v!==null?Math.round(v):"--"); });
+  db.ref("esp32/MQ135/Inside").on("value",  s => setText("val_mqIn",  s.val()!==null?s.val():"--"));
+  db.ref("esp32/MQ135/Outside").on("value", s => setText("val_mqOut", s.val()!==null?s.val():"--"));
 
-  db.ref("esp32/SHT30/Temperature").on("value", s => {
-    const v = s.val();
-    setText("val_tempIn", v !== null ? v.toFixed(1) : "--");
-    flagCard("card_tempIn", v, 15, 35);
-    markUpdate();
-  });
-
-  db.ref("esp32/SHT30/Humidity").on("value", s => {
-    const v = s.val();
-    setText("val_humIn", v !== null ? v.toFixed(1) : "--");
-    flagCard("card_humIn", v, 80, 95);
-    markUpdate();
-  });
-
-  db.ref("esp32/SHT30_Outside/Temperature").on("value", s => {
-    const v = s.val();
-    setText("val_tempOut", v !== null ? v.toFixed(1) : "--");
-    flagCard("card_tempOut", v, 10, 40);
-  });
-
-  db.ref("esp32/SHT30_Outside/Humidity").on("value", s => {
-    const v = s.val();
-    setText("val_humOut", v !== null ? v.toFixed(1) : "--");
-  });
-
-  db.ref("esp32/LUX").on("value", s => {
-    const v = s.val();
-    setText("val_lux", v !== null ? Math.round(v) : "--");
-  });
-
-  db.ref("esp32/MQ135/Inside").on("value",  s => setText("val_mqIn",  s.val() !== null ? s.val() : "--"));
-  db.ref("esp32/MQ135/Outside").on("value", s => setText("val_mqOut", s.val() !== null ? s.val() : "--"));
-
-  /* Tank — both listeners update shared state then re-render graphic */
-  db.ref("esp32/Tank/Low").on("value", s => {
-    tankLowVal = !!s.val();
-    updateTankGraphic();
-  });
-
-  db.ref("esp32/Tank/Full").on("value", s => {
-    tankFullVal = !!s.val();
-    updateTankGraphic();
-  });
+  db.ref("esp32/Tank/Low").on("value",  s => { tankLowVal  = !!s.val(); updateTankGraphic(); });
+  db.ref("esp32/Tank/Full").on("value", s => { tankFullVal = !!s.val(); updateTankGraphic(); });
 
   db.ref("esp32/Motor/State").on("value", s => {
     const on = !!s.val();
@@ -976,115 +476,287 @@ function startListeners() {
     document.getElementById("motorDot").classList.toggle("on", on);
   });
 
-  db.ref("esp32/heartbeat").on("value", s => {
-    if(s.val() !== null) { setWifi(true); resetHeartbeatTimer(); }
+  db.ref("esp32/heartbeat").on("value", s => { if(s.val()!==null){ setWifi(true); resetHeartbeatTimer(); } });
+
+  /* pre-fill settings inputs */
+  db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val()!==null) document.getElementById("inp_humLow").value  = s.val(); });
+  db.ref("esp32/control/humidity_high").once("value", s => { if(s.val()!==null) document.getElementById("inp_humHigh").value = s.val(); });
+  db.ref("esp32/control/min_run_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_minRun").value  = s.val(); });
+  db.ref("esp32/control/min_off_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_minOff").value  = s.val(); });
+  db.ref("esp32/control/max_run_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_maxRun").value  = s.val(); });
+}
+
+/* ── CHARTS ── */
+let chartTemp=null, chartHum=null, chartMQ=null, chartLux=null;
+
+const chartDefaults = {
+  responsive:true,
+  plugins:{ legend:{ labels:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:11 } } } },
+  scales:{
+    x:{ ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ color:'#1e3327' } },
+    y:{ ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ color:'#1e3327' } }
+  }
+};
+
+function makeChart(id, datasets) {
+  const ctx = document.getElementById(id).getContext("2d");
+  return new Chart(ctx, { type:'line', data:{ labels:[], datasets }, options: JSON.parse(JSON.stringify(chartDefaults)) });
+}
+
+function initCharts() {
+  if(chartTemp) return;
+  chartTemp = makeChart("chartTemp", [
+    { label:"Inside °C",  data:[], borderColor:"#39ff8f", backgroundColor:"rgba(57,255,143,.08)", tension:.3, pointRadius:3 },
+    { label:"Outside °C", data:[], borderColor:"#ffb800", backgroundColor:"rgba(255,184,0,.05)",  tension:.3, pointRadius:3 }
+  ]);
+  chartHum = makeChart("chartHum", [
+    { label:"Inside % RH",  data:[], borderColor:"#00c9ff", backgroundColor:"rgba(0,201,255,.08)", tension:.3, pointRadius:3 },
+    { label:"Outside % RH", data:[], borderColor:"#9b59b6", backgroundColor:"rgba(155,89,182,.05)",tension:.3, pointRadius:3 }
+  ]);
+  chartMQ = makeChart("chartMQ", [
+    { label:"MQ135 Inside",  data:[], borderColor:"#ff6b6b", backgroundColor:"rgba(255,107,107,.08)", tension:.3, pointRadius:3 },
+    { label:"MQ135 Outside", data:[], borderColor:"#ffa07a", backgroundColor:"rgba(255,160,122,.05)", tension:.3, pointRadius:3 }
+  ]);
+  chartLux = makeChart("chartLux", [
+    { label:"Lux",            data:[], borderColor:"#f9ca24", backgroundColor:"rgba(249,202,36,.08)",  tension:.3, pointRadius:3, yAxisID:'y' },
+    { label:"Motor ON (s)",   data:[], borderColor:"#39ff8f", backgroundColor:"rgba(57,255,143,.06)",  tension:.3, pointRadius:3, yAxisID:'y1', borderDash:[5,3] }
+  ]);
+  chartLux.options.scales.y1 = { type:'linear', position:'right', ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ drawOnChartArea:false } };
+  chartLux.update();
+}
+
+function loadChartData() {
+  const dateStr = document.getElementById("chartDate").value;
+  if(!dateStr) { alert("Select a date first"); return; }
+
+  db.ref("esp32/logs/" + dateStr).once("value", snap => {
+    if(!snap.exists()) { alert("No data for " + dateStr); return; }
+
+    const raw = snap.val();
+    const keys = Object.keys(raw).sort();
+
+    const labels=[], tIn=[], tOut=[], hIn=[], hOut=[], mqIn=[], mqOut=[], luxArr=[], motorArr=[];
+
+    keys.forEach(k => {
+      const r = raw[k];
+      labels.push(k.replace("-",":"));
+      tIn.push(r.tempIn   ?? null);
+      tOut.push(r.tempOut ?? null);
+      hIn.push(r.humIn    ?? null);
+      hOut.push(r.humOut  ?? null);
+      mqIn.push(r.mqIn    ?? null);
+      mqOut.push(r.mqOut  ?? null);
+      luxArr.push(r.lux   ?? null);
+      motorArr.push(r.motorOnS ?? null);
+    });
+
+    const update = (chart, lbl, ...datasets) => {
+      chart.data.labels = lbl;
+      datasets.forEach((d,i) => chart.data.datasets[i].data = d);
+      chart.update();
+    };
+
+    update(chartTemp, labels, tIn, tOut);
+    update(chartHum,  labels, hIn, hOut);
+    update(chartMQ,   labels, mqIn, mqOut);
+    update(chartLux,  labels, luxArr, motorArr);
   });
-
-  /* Pre-fill inputs from Firebase */
-  db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val() !== null) document.getElementById("inp_humLow").value  = s.val(); });
-  db.ref("esp32/control/humidity_high").once("value", s => { if(s.val() !== null) document.getElementById("inp_humHigh").value = s.val(); });
-  db.ref("esp32/control/min_run_time").once("value",  s => { if(s.val() !== null) document.getElementById("inp_minRun").value  = s.val(); });
-  db.ref("esp32/control/min_off_time").once("value",  s => { if(s.val() !== null) document.getElementById("inp_minOff").value  = s.val(); });
-  db.ref("esp32/control/max_run_time").once("value",  s => { if(s.val() !== null) document.getElementById("inp_maxRun").value  = s.val(); });
 }
 
-/* ── Motor controls ── */
-function motorOn() {
-  db.ref("esp32/control").update({ manual_override: true, manual_state: true });
-  showMsg("ctrlMsg", "Override → ON sent");
+/* ── EXPORT PRODUCTION CSV ── */
+function exportProductionCSV() {
+  const dateStr = document.getElementById("chartDate").value;
+  if(!dateStr) { alert("Select a date first"); return; }
+
+  db.ref("esp32/logs/" + dateStr).once("value", snap => {
+    if(!snap.exists()) { alert("No data for " + dateStr); return; }
+
+    const rows = [["timestamp","tempIn","humIn","tempOut","humOut","lux","mqInside","mqOutside","motorOnSec"]];
+    const raw  = snap.val();
+
+    Object.keys(raw).sort().forEach(k => {
+      const r = raw[k];
+      rows.push([
+        dateStr + "T" + k.replace("-",":"),
+        r.tempIn??'', r.humIn??'', r.tempOut??'', r.humOut??'',
+        r.lux??'', r.mqIn??'', r.mqOut??'', r.motorOnS??''
+      ]);
+    });
+
+    downloadCSV(rows, "production_" + dateStr + ".csv");
+  });
 }
 
-function motorOff() {
-  db.ref("esp32/control").update({ manual_override: true, manual_state: false });
-  showMsg("ctrlMsg", "Override → OFF sent");
+/* ── BATCH CRUD ── */
+function saveBatch() {
+  const id        = document.getElementById("b_id").value.trim();
+  const spawn     = document.getElementById("b_spawn").value.trim();
+  const substrate = document.getElementById("b_substrate").value.trim();
+  const date      = document.getElementById("b_date").value;
+  const bags      = parseInt(document.getElementById("b_bags").value);
+  const notes     = document.getElementById("b_notes").value.trim();
+
+  if(!id||!spawn||!substrate||!date||isNaN(bags)) { showMsg("batchMsg","Fill all required fields"); return; }
+
+  const record = { id, spawn, substrate, date, bags, notes, createdAt: new Date().toISOString() };
+
+  db.ref("farm/batches/" + id).set(record)
+    .then(() => {
+      showMsg("batchMsg","✓ Batch " + id + " saved");
+      ["b_id","b_spawn","b_substrate","b_date","b_bags","b_notes"].forEach(f => document.getElementById(f).value="");
+      loadBatchTable();
+    })
+    .catch(err => showMsg("batchMsg","✗ " + err.message));
 }
 
-function motorAuto() {
-  db.ref("esp32/control").update({ manual_override: false, manual_state: false });
-  showMsg("ctrlMsg", "Auto mode restored");
+function loadBatchTable() {
+  db.ref("farm/batches").once("value", snap => {
+    const tbody = document.getElementById("batchTableBody");
+    tbody.innerHTML = "";
+    if(!snap.exists()) return;
+    Object.values(snap.val()).sort((a,b)=>b.createdAt?.localeCompare(a.createdAt??'')??0).forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><span class="badge badge-spawn">${r.id}</span></td><td>${r.spawn}</td><td>${r.substrate}</td><td>${r.date}</td><td>${r.bags}</td><td>${r.notes||'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+  });
 }
 
-/* ── Humidity limits ── */
+function exportBatchCSV() {
+  db.ref("farm/batches").once("value", snap => {
+    if(!snap.exists()) { alert("No batch records"); return; }
+    const rows = [["Batch ID","Spawn Type","Substrate","Spawn Date","Bags","Notes"]];
+    Object.values(snap.val()).forEach(r => rows.push([r.id,r.spawn,r.substrate,r.date,r.bags,r.notes||'']));
+    downloadCSV(rows, "batch_info.csv");
+  });
+}
+
+/* ── HARVEST CRUD ── */
+function saveHarvest() {
+  const batchId = document.getElementById("h_batchId").value.trim();
+  const flush   = parseInt(document.getElementById("h_flush").value);
+  const date    = document.getElementById("h_date").value;
+  const yield_g = parseFloat(document.getElementById("h_yield").value);
+  const notes   = document.getElementById("h_notes").value.trim();
+
+  if(!batchId||isNaN(flush)||!date||isNaN(yield_g)) { showMsg("harvestMsg","Fill all required fields"); return; }
+
+  const key    = batchId + "_F" + flush;
+  const record = { batchId, flush, date, yield_g, notes, createdAt: new Date().toISOString() };
+
+  db.ref("farm/harvests/" + key).set(record)
+    .then(() => {
+      showMsg("harvestMsg","✓ Harvest saved");
+      ["h_batchId","h_flush","h_date","h_yield","h_notes"].forEach(f => document.getElementById(f).value="");
+      loadHarvestTable();
+    })
+    .catch(err => showMsg("harvestMsg","✗ " + err.message));
+}
+
+function loadHarvestTable() {
+  db.ref("farm/harvests").once("value", snap => {
+    const tbody = document.getElementById("harvestTableBody");
+    tbody.innerHTML = "";
+    if(!snap.exists()) return;
+    Object.values(snap.val()).sort((a,b)=>b.date?.localeCompare(a.date??'')??0).forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><span class="badge badge-harvest">${r.batchId}</span></td><td>Flush ${r.flush}</td><td>${r.date}</td><td>${r.yield_g} g</td><td>${r.notes||'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function exportHarvestCSV() {
+  db.ref("farm/harvests").once("value", snap => {
+    if(!snap.exists()) { alert("No harvest records"); return; }
+    const rows = [["Batch ID","Flush","Harvest Date","Yield (g)","Notes"]];
+    Object.values(snap.val()).forEach(r => rows.push([r.batchId,"Flush "+r.flush,r.date,r.yield_g,r.notes||'']));
+    downloadCSV(rows, "harvest_log.csv");
+  });
+}
+
+/* ── CONTROLS ── */
+function motorOn()   { db.ref("esp32/control").update({ manual_override:true,  manual_state:true  }); showMsg("ctrlMsg","Override → ON sent"); }
+function motorOff()  { db.ref("esp32/control").update({ manual_override:true,  manual_state:false }); showMsg("ctrlMsg","Override → OFF sent"); }
+function motorAuto() { db.ref("esp32/control").update({ manual_override:false, manual_state:false }); showMsg("ctrlMsg","Auto mode restored"); }
+
 function updateLimits() {
-  const low  = parseFloat(document.getElementById("inp_humLow").value);
-  const high = parseFloat(document.getElementById("inp_humHigh").value);
-  if(isNaN(low) || isNaN(high))   { showMsg("limMsg", "Enter valid numbers"); return; }
-  if(low >= high)                  { showMsg("limMsg", "Low must be < High");  return; }
-  if(low < 10 || high > 99)        { showMsg("limMsg", "Values must be 10–99%"); return; }
-
-  Promise.all([
-    db.ref("esp32/control/humidity_low").set(low),
-    db.ref("esp32/control/humidity_high").set(high)
-  ])
-  .then(() => showMsg("limMsg", `✓ Limits saved: ${low}% – ${high}%`))
-  .catch(err => showMsg("limMsg", "✗ " + err.message));
+  const low=parseFloat(document.getElementById("inp_humLow").value), high=parseFloat(document.getElementById("inp_humHigh").value);
+  if(isNaN(low)||isNaN(high)){ showMsg("limMsg","Enter valid numbers"); return; }
+  if(low>=high){ showMsg("limMsg","Low must be < High"); return; }
+  if(low<10||high>99){ showMsg("limMsg","Values 10–99%"); return; }
+  Promise.all([db.ref("esp32/control/humidity_low").set(low), db.ref("esp32/control/humidity_high").set(high)])
+    .then(()=>showMsg("limMsg",`✓ ${low}% – ${high}%`)).catch(e=>showMsg("limMsg","✗ "+e.message));
 }
 
-/* ── Timing controls ── */
 function updateTiming() {
-  const minRun = parseInt(document.getElementById("inp_minRun").value);
-  const minOff = parseInt(document.getElementById("inp_minOff").value);
-  if(isNaN(minRun) || isNaN(minOff)) { showMsg("timMsg", "Enter valid numbers"); return; }
-  if(minRun < 1 || minOff < 1)       { showMsg("timMsg", "Values must be ≥ 1s");  return; }
-
-  Promise.all([
-    db.ref("esp32/control/min_run_time").set(minRun),
-    db.ref("esp32/control/min_off_time").set(minOff)
-  ])
-  .then(() => showMsg("timMsg", `✓ Min run: ${minRun}s  |  Min off: ${minOff}s`))
-  .catch(err => showMsg("timMsg", "✗ " + err.message));
+  const r=parseInt(document.getElementById("inp_minRun").value), o=parseInt(document.getElementById("inp_minOff").value);
+  if(isNaN(r)||isNaN(o)||r<1||o<1){ showMsg("timMsg","Invalid values"); return; }
+  Promise.all([db.ref("esp32/control/min_run_time").set(r), db.ref("esp32/control/min_off_time").set(o)])
+    .then(()=>showMsg("timMsg",`✓ Run ${r}s · Off ${o}s`)).catch(e=>showMsg("timMsg","✗ "+e.message));
 }
 
 function updateMaxRun() {
-  const maxRun = parseInt(document.getElementById("inp_maxRun").value);
-  if(isNaN(maxRun)) { showMsg("maxMsg", "Enter a valid number"); return; }
-  if(maxRun < 10)   { showMsg("maxMsg", "Must be at least 10s");  return; }
-
-  db.ref("esp32/control/max_run_time").set(maxRun)
-    .then(() => showMsg("maxMsg", `✓ Max run cutoff: ${maxRun}s`))
-    .catch(err => showMsg("maxMsg", "✗ " + err.message));
+  const v=parseInt(document.getElementById("inp_maxRun").value);
+  if(isNaN(v)||v<10){ showMsg("maxMsg","Min 10s"); return; }
+  db.ref("esp32/control/max_run_time").set(v).then(()=>showMsg("maxMsg",`✓ Cutoff ${v}s`)).catch(e=>showMsg("maxMsg","✗ "+e.message));
 }
 
-/* ── Helpers ── */
-function setText(id, val) { document.getElementById(id).innerText = val; }
+/* ── NAV ── */
+function showPage(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("page-" + name).classList.add("active");
+  event.target.classList.add("active");
+  if(name === "production") {
+    initCharts();
+    if(document.getElementById("chartDate").value) loadChartData();
+  }
+  if(name === "batch")   loadBatchTable();
+  if(name === "harvest") loadHarvestTable();
+}
 
-function flagCard(id, val, warn, danger) {
-  const el = document.getElementById(id);
+/* ── HELPERS ── */
+function setText(id,val){ document.getElementById(id).innerText=val; }
+
+function flagCard(id,val,warn,danger) {
+  const el=document.getElementById(id);
   el.classList.remove("warn","alert");
-  if(val === null) return;
-  if(val > danger || val < (warn - 10)) el.classList.add("alert");
-  else if(val > warn) el.classList.add("warn");
+  if(val===null)return;
+  if(val>danger||val<(warn-10)) el.classList.add("alert");
+  else if(val>warn) el.classList.add("warn");
 }
 
-function showMsg(id, text) {
-  const el = document.getElementById(id);
-  el.innerText = text;
-  el.classList.add("show");
+function showMsg(id,text) {
+  const el=document.getElementById(id);
+  el.innerText=text; el.classList.add("show");
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), 3500);
+  el._t=setTimeout(()=>el.classList.remove("show"),3500);
 }
 
-function markUpdate() {
-  document.getElementById("lastUpdate").innerText = new Date().toLocaleTimeString();
+function markUpdate(){ document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString(); }
+
+let heartbeatTimer=null;
+function resetHeartbeatTimer(){ clearTimeout(heartbeatTimer); heartbeatTimer=setTimeout(()=>setWifi(false),25000); }
+function setWifi(on){ document.getElementById("wifiStatus").className=on?"online":""; document.getElementById("wifiLabel").innerText=on?"online":"offline"; }
+
+function clockTick(){ document.getElementById("footerTime").innerText=new Date().toLocaleString(); setTimeout(clockTick,1000); }
+
+function setTodayDate(){
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("chartDate").value = today;
+  document.getElementById("b_date").value    = today;
+  document.getElementById("h_date").value    = today;
 }
 
-let heartbeatTimer = null;
-
-function resetHeartbeatTimer() {
-  clearTimeout(heartbeatTimer);
-  heartbeatTimer = setTimeout(() => setWifi(false), 25000);
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(",")).join("\n");
+  const blob = new Blob([csv], { type:"text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
 }
-
-function setWifi(on) {
-  document.getElementById("wifiStatus").className = on ? "online" : "";
-  document.getElementById("wifiLabel").innerText  = on ? "online" : "offline";
-}
-
-function clockTick() {
-  document.getElementById("footerTime").innerText = new Date().toLocaleString();
-  setTimeout(clockTick, 1000);
-}
-
 </script>
 </body>
 </html>
