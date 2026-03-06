@@ -1,222 +1,827 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mushroom Farm Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 
 <style>
+  :root {
+    --bg:        #0a0f0d;
+    --panel:     #111a14;
+    --border:    #1e3327;
+    --accent:    #39ff8f;
+    --accent2:   #00c9ff;
+    --warn:      #ffb800;
+    --danger:    #ff4444;
+    --text:      #c8e6c9;
+    --muted:     #4a7a5a;
+    --font-ui:   'Syne', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+  }
 
-body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,#667eea,#764ba2);
-color:#333;
-}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-.login-box{
-width:320px;
-margin:120px auto;
-padding:30px;
-background:#fff;
-border-radius:15px;
-text-align:center;
-}
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-.dashboard{
-display:none;
-padding:20px;
-}
+  /* ── noise texture overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
 
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-margin:10px;
-width:180px;
-text-align:center;
-}
+  /* ══ LOGIN ══════════════════════════════════════════════ */
 
-.data-container{
-display:flex;
-flex-wrap:wrap;
-justify-content:center;
-}
+  #loginBox {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    background: var(--bg);
+  }
 
-button{
-padding:10px;
-margin-top:10px;
-}
+  .login-card {
+    width: 360px;
+    padding: 48px 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    position: relative;
+  }
 
+  .login-card h2 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .login-card p.sub {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 36px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    background: #0d1810;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #0a0f0d;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  #loginError {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--danger);
+    margin-top: 14px;
+    min-height: 18px;
+  }
+
+  /* ══ DASHBOARD ══════════════════════════════════════════ */
+
+  #dashboard {
+    display: none;
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+
+  /* header */
+  .topbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topbar h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .topbar h1 span {
+    color: var(--accent);
+  }
+
+  .topbar .ts {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  #wifiStatus {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    margin-right: 6px;
+    vertical-align: middle;
+    transition: background 0.4s;
+  }
+
+  #wifiStatus.online { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+  /* section label */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    margin-top: 36px;
+  }
+
+  /* sensor grid */
+  .sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+
+  .s-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .s-card:hover { border-color: var(--accent); }
+
+  .s-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .s-card:hover::after { transform: scaleX(1); }
+
+  .s-card .label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .s-card .value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+
+  .s-card .unit {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+
+  .s-card.warn  { border-color: var(--warn); }
+  .s-card.alert { border-color: var(--danger); }
+
+  /* motor status banner */
+  .motor-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    margin-top: 14px;
+  }
+
+  .motor-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .motor-dot.on {
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 1.4s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 6px var(--accent); }
+    50%      { box-shadow: 0 0 18px var(--accent); }
+  }
+
+  .motor-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #fff;
+  }
+
+  .motor-sub {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* tank bar */
+  .tank-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .tank-indicator {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tank-indicator .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .tank-indicator.active .dot {
+    background: var(--warn);
+    box-shadow: 0 0 8px var(--warn);
+  }
+
+  .tank-indicator .ti-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .tank-indicator .ti-val {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+
+  /* ── control panels ── */
+  .control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  @media(max-width:600px) { .control-grid { grid-template-columns: 1fr; } }
+
+  .ctrl-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 24px;
+  }
+
+  .ctrl-panel h3 {
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .motor-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-on, .btn-off, .btn-auto, .btn-update {
+    flex: 1;
+    padding: 11px 0;
+    border: none;
+    font-family: var(--font-ui);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .btn-on    { background: var(--accent);  color: #0a0f0d; }
+  .btn-off   { background: var(--danger);  color: #fff; }
+  .btn-auto  { background: transparent; border: 1px solid var(--accent2); color: var(--accent2); flex: 1.3; }
+  .btn-update{ background: var(--accent2); color: #0a0f0d; width: 100%; margin-top: 14px; padding: 11px; }
+
+  .btn-on:hover,.btn-off:hover,.btn-auto:hover,.btn-update:hover { opacity: 0.8; transform: translateY(-1px); }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .inp-group {
+    flex: 1;
+  }
+
+  .inp-group label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .inp-group input {
+    width: 100%;
+    padding: 9px 12px;
+    background: #0d1810;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .inp-group input:focus { border-color: var(--accent2); }
+
+  #ctrlMsg {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    min-height: 18px;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #ctrlMsg.show { opacity: 1; }
+
+  /* MQ row */
+  .mq-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  /* footer */
+  .footer {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* fade-in on load */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .s-card, .ctrl-panel, .motor-banner, .tank-indicator {
+    animation: fadeUp 0.5s ease both;
+  }
 </style>
 </head>
-
 <body>
 
-<div class="login-box" id="loginBox">
-<h2>Mushroom Farm Login</h2>
+<!-- ══ LOGIN ═══════════════════════════════════════════════ -->
+<div id="loginBox">
+  <div class="login-card">
+    <h2>🍄 Mushroom Farm</h2>
+    <p class="sub">// secure device access terminal</p>
 
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="user@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
 
-<button onclick="login()">Login</button>
-
-<p id="error"></p>
+    <button class="btn-primary" onclick="login()">Authenticate</button>
+    <div id="loginError"></div>
+  </div>
 </div>
 
+<!-- ══ DASHBOARD ════════════════════════════════════════════ -->
+<div id="dashboard">
 
-<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div>
+      <h1>Farm <span>Monitor</span></h1>
+    </div>
+    <div class="ts">
+      <span id="wifiStatus"></span><span id="wifiLabel">offline</span><br>
+      Last update: <span id="lastUpdate">--</span>
+    </div>
+  </div>
 
-<h1 style="text-align:center;color:white;">Farm Environment</h1>
+  <!-- INSIDE sensors -->
+  <div class="section-label">// inside environment</div>
+  <div class="sensor-grid">
+    <div class="s-card" id="card_tempIn">
+      <div class="label">Temperature · Inside</div>
+      <div class="value" id="val_tempIn">--</div>
+      <div class="unit">°C</div>
+    </div>
+    <div class="s-card" id="card_humIn">
+      <div class="label">Humidity · Inside</div>
+      <div class="value" id="val_humIn">--</div>
+      <div class="unit">% RH</div>
+    </div>
+    <div class="s-card" id="card_lux">
+      <div class="label">Light Level</div>
+      <div class="value" id="val_lux">--</div>
+      <div class="unit">lux</div>
+    </div>
+  </div>
 
-<div class="data-container">
+  <!-- OUTSIDE sensors -->
+  <div class="section-label">// outside environment</div>
+  <div class="sensor-grid">
+    <div class="s-card" id="card_tempOut">
+      <div class="label">Temperature · Outside</div>
+      <div class="value" id="val_tempOut">--</div>
+      <div class="unit">°C</div>
+    </div>
+    <div class="s-card" id="card_humOut">
+      <div class="label">Humidity · Outside</div>
+      <div class="value" id="val_humOut">--</div>
+      <div class="unit">% RH</div>
+    </div>
+  </div>
 
-<div class="card">
-<h3>Temp Inside</h3>
-<p id="temp_in">--</p>
+  <!-- MQ135 -->
+  <div class="section-label">// air quality · MQ135</div>
+  <div class="mq-row">
+    <div class="s-card">
+      <div class="label">CO₂ / Air · Inside</div>
+      <div class="value" id="val_mqIn">--</div>
+      <div class="unit">raw ADC</div>
+    </div>
+    <div class="s-card">
+      <div class="label">CO₂ / Air · Outside</div>
+      <div class="value" id="val_mqOut">--</div>
+      <div class="unit">raw ADC</div>
+    </div>
+  </div>
+
+  <!-- MOTOR + TANK -->
+  <div class="section-label">// humidifier & tank</div>
+
+  <div class="motor-banner">
+    <div class="motor-dot" id="motorDot"></div>
+    <div>
+      <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
+      <div class="motor-sub">auto mode · relay active-low</div>
+    </div>
+  </div>
+
+  <div class="tank-row">
+    <div class="tank-indicator" id="ind_tankLow">
+      <div class="dot"></div>
+      <div>
+        <div class="ti-label">Water Low Sensor</div>
+        <div class="ti-val" id="val_tankLow">--</div>
+      </div>
+    </div>
+    <div class="tank-indicator" id="ind_tankFull">
+      <div class="dot"></div>
+      <div>
+        <div class="ti-label">Water Full Sensor</div>
+        <div class="ti-val" id="val_tankFull">--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="section-label">// remote control</div>
+  <div class="control-grid">
+
+    <div class="ctrl-panel">
+      <h3>Motor Override</h3>
+      <div class="motor-btns">
+        <button class="btn-on"  onclick="motorOn()">ON</button>
+        <button class="btn-off" onclick="motorOff()">OFF</button>
+        <button class="btn-auto" onclick="motorAuto()">Auto</button>
+      </div>
+      <div id="ctrlMsg"></div>
+    </div>
+
+    <div class="ctrl-panel">
+      <h3>Humidity Limits</h3>
+      <div class="input-row">
+        <div class="inp-group">
+          <label>Low (%)</label>
+          <input type="number" id="inp_humLow"  placeholder="85" step="0.5">
+        </div>
+        <div class="inp-group">
+          <label>High (%)</label>
+          <input type="number" id="inp_humHigh" placeholder="92" step="0.5">
+        </div>
+      </div>
+      <button class="btn-update" onclick="updateLimits()">Update Limits</button>
+      <div id="limMsg" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent2);min-height:18px;margin-top:10px;opacity:0;transition:opacity 0.3s;"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span>esp32 · mushroom-farm-dd30b · asia-southeast1</span>
+    <span id="footerTime"></span>
+  </div>
+
 </div>
 
-<div class="card">
-<h3>Humidity Inside</h3>
-<p id="hum_in">--</p>
-</div>
-
-<div class="card">
-<h3>Temp Outside</h3>
-<p id="temp_out">--</p>
-</div>
-
-<div class="card">
-<h3>Humidity Outside</h3>
-<p id="hum_out">--</p>
-</div>
-
-<div class="card">
-<h3>Light</h3>
-<p id="light">--</p>
-</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Motor Control</h3>
-
-<button onclick="motorOn()">ON</button>
-<button onclick="motorOff()">OFF</button>
-
-</div>
-
-
-<div class="card">
-
-<h3>Humidity Limits</h3>
-
-<input id="low" placeholder="Low">
-<input id="high" placeholder="High">
-
-<button onclick="updateLimits()">Update</button>
-
-</div>
-
-</div>
-
-
+<!-- Firebase SDK v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-
 <script>
 
+/* ── Firebase config — matches ESP32 credentials ── */
 const firebaseConfig = {
-apiKey:"APIKEY",
-databaseURL:"YOUR_DATABASE"
+  apiKey:      "AIzaSyBk3tFe8gw5Jwgk7NsJLwTlmXcdAcDLwcE",
+  databaseURL: "https://mushroom-farm-dd30b-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.database();
+
+/* ── Login ── */
+function login() {
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  document.getElementById("loginError").innerText = "";
+
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(e => {
+      document.getElementById("loginError").innerText = e.message;
+    });
 }
 
-firebase.initializeApp(firebaseConfig)
+/* ── Auth state ── */
+auth.onAuthStateChanged(user => {
+  if(user) {
+    document.getElementById("loginBox").style.display    = "none";
+    document.getElementById("dashboard").style.display   = "block";
+    startListeners();
+    clockTick();
+  }
+});
 
-const auth=firebase.auth()
-const db=firebase.database()
+/* ─────────────────────────────────────────────────────────
+   Firebase paths — exactly matching ESP32 uploadFirebase()
+   esp32/SHT30/Temperature          ← tempIn
+   esp32/SHT30/Humidity             ← humIn
+   esp32/SHT30_Outside/Temperature  ← tempOut
+   esp32/SHT30_Outside/Humidity     ← humOut
+   esp32/LUX                        ← lux
+   esp32/MQ135/Inside               ← mqInside
+   esp32/MQ135/Outside              ← mqOutside
+   esp32/Tank/Low                   ← tankLow
+   esp32/Tank/Full                  ← tankFull
+   esp32/Motor/State                ← motorState
+   esp32/control/manual_override    ← written by dashboard
+   esp32/control/manual_state       ← written by dashboard
+   esp32/control/humidity_low       ← written by dashboard
+   esp32/control/humidity_high      ← written by dashboard
+   ───────────────────────────────────────────────────────── */
 
+function startListeners() {
 
-function login(){
+  /* Inside temp */
+  db.ref("esp32/SHT30/Temperature").on("value", s => {
+    const v = s.val();
+    setText("val_tempIn", v !== null ? v.toFixed(1) : "--");
+    flagCard("card_tempIn", v, 15, 35);
+    markUpdate();
+  });
 
-let email=document.getElementById("email").value
-let password=document.getElementById("password").value
+  /* Inside humidity */
+  db.ref("esp32/SHT30/Humidity").on("value", s => {
+    const v = s.val();
+    setText("val_humIn", v !== null ? v.toFixed(1) : "--");
+    flagCard("card_humIn", v, 80, 95);
+    markUpdate();
+  });
 
-auth.signInWithEmailAndPassword(email,password)
+  /* Outside temp */
+  db.ref("esp32/SHT30_Outside/Temperature").on("value", s => {
+    const v = s.val();
+    setText("val_tempOut", v !== null ? v.toFixed(1) : "--");
+    flagCard("card_tempOut", v, 10, 40);
+  });
 
-.catch(e=>{
-document.getElementById("error").innerText=e.message
-})
+  /* Outside humidity */
+  db.ref("esp32/SHT30_Outside/Humidity").on("value", s => {
+    const v = s.val();
+    setText("val_humOut", v !== null ? v.toFixed(1) : "--");
+  });
 
+  /* Lux */
+  db.ref("esp32/LUX").on("value", s => {
+    const v = s.val();
+    setText("val_lux", v !== null ? Math.round(v) : "--");
+  });
+
+  /* MQ135 */
+  db.ref("esp32/MQ135/Inside").on("value",  s => setText("val_mqIn",  s.val() !== null ? s.val() : "--"));
+  db.ref("esp32/MQ135/Outside").on("value", s => setText("val_mqOut", s.val() !== null ? s.val() : "--"));
+
+  /* Tank */
+  db.ref("esp32/Tank/Low").on("value", s => {
+    const v = s.val();
+    setText("val_tankLow", v ? "TRIGGERED" : "OK");
+    document.getElementById("ind_tankLow").classList.toggle("active", !!v);
+  });
+
+  db.ref("esp32/Tank/Full").on("value", s => {
+    const v = s.val();
+    setText("val_tankFull", v ? "TRIGGERED" : "OK");
+    document.getElementById("ind_tankFull").classList.toggle("active", !!v);
+  });
+
+  /* Motor state */
+  db.ref("esp32/Motor/State").on("value", s => {
+    const on = !!s.val();
+    document.getElementById("motorLabel").innerText = on ? "RUNNING" : "IDLE";
+    document.getElementById("motorDot").classList.toggle("on", on);
+  });
+
+  /* WiFi presence — reads timestamp written by ESP32 */
+  db.ref("esp32/SHT30/Temperature").on("value", () => {
+    setWifi(true);
+  });
+
+  /* Read current limit values into inputs */
+  db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val() !== null) document.getElementById("inp_humLow").value  = s.val(); });
+  db.ref("esp32/control/humidity_high").once("value", s => { if(s.val() !== null) document.getElementById("inp_humHigh").value = s.val(); });
 }
 
-
-auth.onAuthStateChanged(user=>{
-
-if(user){
-
-loginBox.style.display="none"
-dashboard.style.display="block"
-
-startReading()
-
+/* ── Motor control ── */
+function motorOn() {
+  db.ref("esp32/control/manual_override").set(true);
+  db.ref("esp32/control/manual_state").set(true);
+  showMsg("ctrlMsg", "Override → ON sent");
 }
 
-})
-
-
-function startReading(){
-
-db.ref("esp32/sensors/temp_inside").on("value",s=>{
-temp_in.innerHTML=s.val()
-})
-
-db.ref("esp32/sensors/humidity_inside").on("value",s=>{
-hum_in.innerHTML=s.val()
-})
-
-db.ref("esp32/sensors/temp_outside").on("value",s=>{
-temp_out.innerHTML=s.val()
-})
-
-db.ref("esp32/sensors/humidity_outside").on("value",s=>{
-hum_out.innerHTML=s.val()
-})
-
-db.ref("esp32/sensors/light").on("value",s=>{
-light.innerHTML=s.val()
-})
-
+function motorOff() {
+  db.ref("esp32/control/manual_override").set(true);
+  db.ref("esp32/control/manual_state").set(false);
+  showMsg("ctrlMsg", "Override → OFF sent");
 }
 
-
-function motorOn(){
-
-db.ref("esp32/control/motor_status").set(1)
-
+function motorAuto() {
+  db.ref("esp32/control/manual_override").set(false);
+  showMsg("ctrlMsg", "Auto mode restored");
 }
 
-function motorOff(){
+/* ── Humidity limits ── */
+function updateLimits() {
+  const low  = parseFloat(document.getElementById("inp_humLow").value);
+  const high = parseFloat(document.getElementById("inp_humHigh").value);
 
-db.ref("esp32/control/motor_status").set(0)
+  if(isNaN(low) || isNaN(high)) {
+    showMsg("limMsg", "Enter valid numbers");
+    return;
+  }
 
+  if(low >= high) {
+    showMsg("limMsg", "Low must be < High");
+    return;
+  }
+
+  db.ref("esp32/control/humidity_low").set(low);
+  db.ref("esp32/control/humidity_high").set(high);
+  showMsg("limMsg", `Limits set: ${low}% – ${high}%`);
 }
 
-function updateLimits(){
+/* ── Helpers ── */
+function setText(id, val) {
+  document.getElementById(id).innerText = val;
+}
 
-let low=document.getElementById("low").value
-let high=document.getElementById("high").value
+function flagCard(id, val, warn, danger) {
+  const el = document.getElementById(id);
+  el.classList.remove("warn","alert");
+  if(val === null) return;
+  if(val > danger || val < (warn - 10)) el.classList.add("alert");
+  else if(val > warn) el.classList.add("warn");
+}
 
-db.ref("esp32/control/humidity_low").set(parseFloat(low))
-db.ref("esp32/control/humidity_high").set(parseFloat(high))
+function showMsg(id, text) {
+  const el = document.getElementById(id);
+  el.innerText = text;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3000);
+}
 
+function markUpdate() {
+  document.getElementById("lastUpdate").innerText = new Date().toLocaleTimeString();
+}
+
+function setWifi(on) {
+  document.getElementById("wifiStatus").className = on ? "online" : "";
+  document.getElementById("wifiLabel").innerText  = on ? "online" : "offline";
+}
+
+function clockTick() {
+  document.getElementById("footerTime").innerText = new Date().toLocaleString();
+  setTimeout(clockTick, 1000);
 }
 
 </script>
-
 </body>
 </html>
