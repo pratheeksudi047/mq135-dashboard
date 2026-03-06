@@ -614,6 +614,39 @@
 
   </div>
 
+  <!-- TIMING CONTROLS -->
+  <div class="section-label">// motor timing controls</div>
+  <div class="control-grid">
+
+    <div class="ctrl-panel">
+      <h3>Run &amp; Off Times</h3>
+      <div class="input-row">
+        <div class="inp-group">
+          <label>Min Run (s)</label>
+          <input type="number" id="inp_minRun" placeholder="60" min="1" step="1">
+        </div>
+        <div class="inp-group">
+          <label>Min Off (s)</label>
+          <input type="number" id="inp_minOff" placeholder="120" min="1" step="1">
+        </div>
+      </div>
+      <button class="btn-update" onclick="updateTiming()">Update Timing</button>
+      <div id="timMsg" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent2);min-height:18px;margin-top:10px;opacity:0;transition:opacity 0.3s;"></div>
+    </div>
+
+    <div class="ctrl-panel">
+      <h3>Safety Cutoff</h3>
+      <div class="input-row">
+        <div class="inp-group">
+          <label>Max Run (s)</label>
+          <input type="number" id="inp_maxRun" placeholder="600" min="1" step="1">
+        </div>
+      </div>
+      <p style="font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);margin-top:10px;">Motor is force-stopped after this duration regardless of humidity.</p>
+      <button class="btn-update" onclick="updateMaxRun()">Update Cutoff</button>
+      <div id="maxMsg" style="font-family:var(--font-mono);font-size:0.7rem;color:var(--accent2);min-height:18px;margin-top:10px;opacity:0;transition:opacity 0.3s;"></div>
+    </div>
+
   <div class="footer">
     <span>esp32 · mushroom-farm-dd30b · asia-southeast1</span>
     <span id="footerTime"></span>
@@ -751,6 +784,11 @@ function startListeners() {
   /* Read current limit values into inputs */
   db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val() !== null) document.getElementById("inp_humLow").value  = s.val(); });
   db.ref("esp32/control/humidity_high").once("value", s => { if(s.val() !== null) document.getElementById("inp_humHigh").value = s.val(); });
+
+  /* Read current timing values into inputs (stored in seconds on Firebase) */
+  db.ref("esp32/control/min_run_time").once("value", s => { if(s.val() !== null) document.getElementById("inp_minRun").value = s.val(); });
+  db.ref("esp32/control/min_off_time").once("value", s => { if(s.val() !== null) document.getElementById("inp_minOff").value = s.val(); });
+  db.ref("esp32/control/max_run_time").once("value", s => { if(s.val() !== null) document.getElementById("inp_maxRun").value = s.val(); });
 }
 
 /* ── Motor control ── */
@@ -837,7 +875,33 @@ function markUpdate() {
   document.getElementById("lastUpdate").innerText = new Date().toLocaleTimeString();
 }
 
-let heartbeatTimer = null;
+/* ── Timing controls (values in seconds on dashboard, stored as seconds in Firebase) ── */
+
+function updateTiming() {
+  const minRun = parseInt(document.getElementById("inp_minRun").value);
+  const minOff = parseInt(document.getElementById("inp_minOff").value);
+
+  if(isNaN(minRun) || isNaN(minOff)) { showMsg("timMsg", "Enter valid numbers"); return; }
+  if(minRun < 1 || minOff < 1)       { showMsg("timMsg", "Values must be ≥ 1s");  return; }
+
+  Promise.all([
+    db.ref("esp32/control/min_run_time").set(minRun),
+    db.ref("esp32/control/min_off_time").set(minOff)
+  ])
+  .then(() => showMsg("timMsg", `✓ Min run: ${minRun}s  |  Min off: ${minOff}s`))
+  .catch(err => showMsg("timMsg", "✗ " + err.message));
+}
+
+function updateMaxRun() {
+  const maxRun = parseInt(document.getElementById("inp_maxRun").value);
+
+  if(isNaN(maxRun))  { showMsg("maxMsg", "Enter a valid number"); return; }
+  if(maxRun < 10)    { showMsg("maxMsg", "Must be at least 10s");  return; }
+
+  db.ref("esp32/control/max_run_time").set(maxRun)
+    .then(() => showMsg("maxMsg", `✓ Max run cutoff: ${maxRun}s`))
+    .catch(err => showMsg("maxMsg", "✗ " + err.message));
+}
 
 function resetHeartbeatTimer() {
   clearTimeout(heartbeatTimer);
