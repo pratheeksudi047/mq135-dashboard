@@ -739,9 +739,13 @@ function startListeners() {
     document.getElementById("motorDot").classList.toggle("on", on);
   });
 
-  /* WiFi presence — reads timestamp written by ESP32 */
-  db.ref("esp32/SHT30/Temperature").on("value", () => {
-    setWifi(true);
+  /* Heartbeat — marks ESP32 as online only if timestamp updated recently */
+  db.ref("esp32/heartbeat").on("value", s => {
+    if(s.val() !== null)
+    {
+      setWifi(true);
+      resetHeartbeatTimer();
+    }
   });
 
   /* Read current limit values into inputs */
@@ -789,9 +793,23 @@ function updateLimits() {
     return;
   }
 
-  db.ref("esp32/control/humidity_low").set(low);
-  db.ref("esp32/control/humidity_high").set(high);
-  showMsg("limMsg", `Limits set: ${low}% – ${high}%`);
+  if(low < 10 || high > 99) {
+    showMsg("limMsg", "Values must be 10–99%");
+    return;
+  }
+
+  Promise.all([
+    db.ref("esp32/control/humidity_low").set(low),
+    db.ref("esp32/control/humidity_high").set(high)
+  ])
+  .then(() => {
+    showMsg("limMsg", `✓ Limits saved: ${low}% – ${high}%`);
+    console.log("Limits written to Firebase:", low, high);
+  })
+  .catch(err => {
+    showMsg("limMsg", "✗ Write failed: " + err.message);
+    console.error("Firebase write error:", err);
+  });
 }
 
 /* ── Helpers ── */
@@ -817,6 +835,16 @@ function showMsg(id, text) {
 
 function markUpdate() {
   document.getElementById("lastUpdate").innerText = new Date().toLocaleTimeString();
+}
+
+let heartbeatTimer = null;
+
+function resetHeartbeatTimer() {
+  clearTimeout(heartbeatTimer);
+  // If no new heartbeat within 25s, mark offline
+  heartbeatTimer = setTimeout(() => {
+    setWifi(false);
+  }, 25000);
 }
 
 function setWifi(on) {
