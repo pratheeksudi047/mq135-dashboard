@@ -624,10 +624,12 @@
         <div class="inp-group">
           <label>Min Run (s)</label>
           <input type="number" id="inp_minRun" placeholder="60" min="1" step="1">
+          <p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);margin-top:6px;">Motor must run at least this long before it is allowed to turn off, even if humidity is reached.</p>
         </div>
         <div class="inp-group">
           <label>Min Off (s)</label>
           <input type="number" id="inp_minOff" placeholder="120" min="1" step="1">
+          <p style="font-family:var(--font-mono);font-size:0.62rem;color:var(--muted);margin-top:6px;">Motor must stay off at least this long between cycles to prevent rapid switching.</p>
         </div>
       </div>
       <button class="btn-update" onclick="updateTiming()">Update Timing</button>
