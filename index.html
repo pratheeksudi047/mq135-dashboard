@@ -751,19 +751,26 @@ function startListeners() {
 
 /* ── Motor control ── */
 function motorOn() {
-  db.ref("esp32/control/manual_override").set(true);
-  db.ref("esp32/control/manual_state").set(true);
+  db.ref("esp32/control").update({
+    manual_override: true,
+    manual_state: true
+  });
   showMsg("ctrlMsg", "Override → ON sent");
 }
 
 function motorOff() {
-  db.ref("esp32/control/manual_override").set(true);
-  db.ref("esp32/control/manual_state").set(false);
+  db.ref("esp32/control").update({
+    manual_override: true,
+    manual_state: false
+  });
   showMsg("ctrlMsg", "Override → OFF sent");
 }
 
 function motorAuto() {
-  db.ref("esp32/control/manual_override").set(false);
+  db.ref("esp32/control").update({
+    manual_override: false,
+    manual_state: false
+  });
   showMsg("ctrlMsg", "Auto mode restored");
 }
 
