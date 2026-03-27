@@ -65,6 +65,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .motor-label{font-weight:600;font-size:.95rem;color:#fff}
 .motor-sub{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);margin-top:2px}
 
+/* MOTOR INFO ROWS */
+.motor-info-rows{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.motor-info-row{background:var(--panel);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:160px;display:flex;flex-direction:column;gap:3px}
+.motor-info-row .mir-label{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.motor-info-row .mir-val{font-family:var(--font-mono);font-size:.88rem;font-weight:700;color:var(--accent)}
+
 /* TANK */
 .tank-section{display:flex;gap:32px;align-items:flex-start;margin-top:14px;flex-wrap:wrap}
 .tank-graphic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
@@ -209,6 +215,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div>
         <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
         <div class="motor-sub">auto mode · relay active-low · pin 25</div>
+      </div>
+    </div>
+
+    <div class="motor-info-rows">
+      <div class="motor-info-row">
+        <div class="mir-label">Last Switched ON</div>
+        <div class="mir-val" id="motorLastOn">--</div>
+      </div>
+      <div class="motor-info-row">
+        <div class="mir-label">Duration ON</div>
+        <div class="mir-val" id="motorDuration">--</div>
       </div>
     </div>
 
@@ -435,6 +452,36 @@ auth.onAuthStateChanged(user => {
   }
 });
 
+/* ── MOTOR ON TRACKING ── */
+let motorOnSince = null;
+let motorDurationTimer = null;
+
+function formatDuration(ms) {
+  if(ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if(h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+  if(m > 0) return `${m}m ${String(s).padStart(2,'0')}s`;
+  return `${s}s`;
+}
+
+function startDurationTick() {
+  clearInterval(motorDurationTimer);
+  motorDurationTimer = setInterval(() => {
+    if(motorOnSince !== null) {
+      const elapsed = Date.now() - motorOnSince;
+      document.getElementById("motorDuration").innerText = formatDuration(elapsed);
+    }
+  }, 1000);
+}
+
+function stopDurationTick() {
+  clearInterval(motorDurationTimer);
+  motorDurationTimer = null;
+}
+
 /* ── TANK STATE ── */
 let tankLowVal = false, tankFullVal = false;
 
@@ -476,6 +523,24 @@ function startListeners() {
     const on = !!s.val();
     document.getElementById("motorLabel").innerText = on ? "RUNNING" : "IDLE";
     document.getElementById("motorDot").classList.toggle("on", on);
+
+    if(on) {
+      if(motorOnSince === null) {
+        motorOnSince = Date.now();
+        const now = new Date();
+        document.getElementById("motorLastOn").innerText =
+          now.toLocaleDateString() + "  " + now.toLocaleTimeString();
+        document.getElementById("motorDuration").innerText = "0s";
+        startDurationTick();
+      }
+    } else {
+      if(motorOnSince !== null) {
+        const elapsed = Date.now() - motorOnSince;
+        document.getElementById("motorDuration").innerText = formatDuration(elapsed) + " (last run)";
+        motorOnSince = null;
+        stopDurationTick();
+      }
+    }
   });
 
   db.ref("esp32/heartbeat").on("value", s => { if(s.val()!==null){ setWifi(true); resetHeartbeatTimer(); } });
