@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mushroom Farm Dashboard</title>
+<title>Mushroom Farm Dashboard v4.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -30,10 +30,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 #dashboard{display:none;position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:32px 20px 60px}
 
 /* NAV TABS */
-.nav-tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:0}
+.nav-tabs{display:flex;gap:4px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:0;flex-wrap:wrap}
 .nav-tab{padding:10px 22px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
 .nav-tab:hover{color:var(--text)}
 .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-logout{margin-left:auto;padding:10px 18px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--danger);cursor:pointer;background:none;border:1px solid var(--danger);margin-bottom:6px;transition:all .2s}
+.nav-logout:hover{background:rgba(255,68,68,.1)}
 
 /* TOPBAR */
 .topbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px}
@@ -65,6 +67,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .motor-label{font-weight:600;font-size:.95rem;color:#fff}
 .motor-sub{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);margin-top:2px}
 
+/* LED LEGEND */
+.led-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;padding:12px 16px;background:var(--panel);border:1px solid var(--border)}
+.led-item{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:.62rem;color:var(--muted)}
+.led-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.led-dot.blue{background:#00c9ff}.led-dot.red{background:#ff4444}.led-dot.green{background:#39ff8f}
+.led-dot.yellow{background:#ffb800}.led-dot.red-blink{background:#ff4444;animation:blink 1s infinite}
+.led-dot.yellow-blink{background:#ffb800;animation:blink .8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
 /* MOTOR INFO ROWS */
 .motor-info-rows{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
 .motor-info-row{background:var(--panel);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:160px;display:flex;flex-direction:column;gap:3px}
@@ -72,7 +83,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .motor-info-row .mir-val{font-family:var(--font-mono);font-size:.88rem;font-weight:700;color:var(--accent)}
 
 /* TANK */
-.tank-section{display:flex;gap:32px;align-items:flex-start;margin-top:14px;flex-wrap:wrap}
+.tank-section{display:flex;gap:32px;align-items:flex-start;margin-top:20px;flex-wrap:wrap}
 .tank-graphic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0}
 .tank-graphic-label{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .tank-shell{width:110px;height:200px;border:3px solid var(--border);border-radius:6px 6px 10px 10px;position:relative;overflow:hidden;background:#0a1410;box-shadow:inset 0 0 20px rgba(0,0,0,.5),0 0 0 1px #0d1f17}
@@ -126,10 +137,25 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* CHART */
 .chart-wrap{background:var(--panel);border:1px solid var(--border);padding:20px;margin-top:12px;position:relative}
 .chart-wrap canvas{max-height:280px}
+.chart-wrap.chart-sq canvas{max-height:180px}
+
 .chart-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .chart-toolbar label{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
 .chart-toolbar input[type=date]{padding:6px 10px;background:#0d1810;border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:.8rem;outline:none}
 .chart-toolbar input[type=date]:focus{border-color:var(--accent)}
+
+.chart-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chart-title{font-family:var(--font-mono);font-size:.65rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.chart-stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat-pill{font-family:var(--font-mono);font-size:.6rem;padding:3px 10px;border-radius:2px;border:1px solid var(--border);color:var(--muted)}
+.stat-pill span{font-weight:700}
+.stat-pill.green span{color:var(--accent)}
+.stat-pill.amber span{color:var(--warn)}
+.stat-pill.blue  span{color:var(--accent2)}
+
+/* live indicator on motor chart */
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:.6rem;color:var(--accent);padding:2px 8px;border:1px solid var(--accent);border-radius:2px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
 
 /* DATA RECORDS TABLE */
 .records-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.72rem;margin-top:12px}
@@ -147,7 +173,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .form-actions{display:flex;gap:10px;margin-top:16px}
 
 /* FOOTER */
-.footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:.65rem;color:var(--muted);display:flex;justify-content:space-between}
+.footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--border);font-family:var(--font-mono);font-size:.65rem;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .s-card,.ctrl-panel,.motor-banner,.tank-shell,.tank-info-row,.chart-wrap,.form-card{animation:fadeUp .5s ease both}
@@ -160,8 +186,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="login-card">
     <h2>🍄 Mushroom Farm</h2>
     <p class="sub">// secure device access terminal</p>
-    <div class="field"><label>Email</label><input type="email" id="email" placeholder="user@example.com"></div>
-    <div class="field"><label>Password</label><input type="password" id="password" placeholder="••••••••"></div>
+    <div class="field"><label>Email</label><input type="email" id="email" placeholder="user@example.com" autocomplete="username"></div>
+    <div class="field"><label>Password</label><input type="password" id="password" placeholder="••••••••" autocomplete="current-password"></div>
     <button class="btn-primary" onclick="login()">Authenticate</button>
     <div id="loginError"></div>
   </div>
@@ -180,11 +206,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
   <!-- NAV -->
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('live')">Live</button>
-    <button class="nav-tab" onclick="showPage('production')">Production Data</button>
-    <button class="nav-tab" onclick="showPage('batch')">Batch Info</button>
-    <button class="nav-tab" onclick="showPage('harvest')">Harvest Log</button>
-    <button class="nav-tab" onclick="showPage('settings')">Settings</button>
+    <button class="nav-tab active" data-page="live"       onclick="showPage(this,'live')">Live</button>
+    <button class="nav-tab"        data-page="production" onclick="showPage(this,'production')">Production Data</button>
+    <button class="nav-tab"        data-page="batch"      onclick="showPage(this,'batch')">Batch Info</button>
+    <button class="nav-tab"        data-page="harvest"    onclick="showPage(this,'harvest')">Harvest Log</button>
+    <button class="nav-tab"        data-page="settings"   onclick="showPage(this,'settings')">Settings</button>
+    <button class="nav-logout" onclick="logout()">⏻ Logout</button>
   </div>
 
   <!-- ══ PAGE: LIVE ══════════════════════════════════════ -->
@@ -214,8 +241,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="motor-dot" id="motorDot"></div>
       <div>
         <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
-        <div class="motor-sub">auto mode · relay active-low · pin 25</div>
+        <div class="motor-sub" id="motorModeLabel">auto mode · relay active-low · pin 25</div>
       </div>
+    </div>
+
+    <div class="led-legend">
+      <div class="led-item"><div class="led-dot blue"></div>Connecting WiFi</div>
+      <div class="led-item"><div class="led-dot red"></div>Auto — Idle</div>
+      <div class="led-item"><div class="led-dot green"></div>Auto — Running</div>
+      <div class="led-item"><div class="led-dot yellow"></div>Manual — OFF</div>
+      <div class="led-item"><div class="led-dot yellow-blink"></div>Manual — ON</div>
+      <div class="led-item"><div class="led-dot red-blink"></div>Tank Empty!</div>
     </div>
 
     <div class="motor-info-rows">
@@ -224,12 +260,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="mir-val" id="motorLastOn">--</div>
       </div>
       <div class="motor-info-row">
-        <div class="mir-label">Duration ON</div>
+        <div class="mir-label">Duration ON (current / last run)</div>
         <div class="mir-val" id="motorDuration">--</div>
       </div>
     </div>
 
-    <div class="tank-section" style="margin-top:20px;">
+    <div class="tank-section">
       <div class="tank-graphic-wrap">
         <div class="tank-graphic-label">Water Tank</div>
         <div style="position:relative;padding-right:90px;">
@@ -246,7 +282,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="tank-info-row"><div class="row-label">Low Sensor<span class="pin">Pin 32 — bottom</span></div><div class="row-val" id="info_tankLow">--</div></div>
         <div class="tank-info-row"><div class="row-label">Full Sensor<span class="pin">Pin 33 — top</span></div><div class="row-val" id="info_tankFull">--</div></div>
         <div class="tank-info-row"><div class="row-label">Tank Status</div><div class="row-val" id="info_tankStatus">--</div></div>
-        <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);padding:10px 4px;line-height:1.7;">YES = EMPTY at that sensor · NO = water present</div>
+        <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);padding:10px 4px;line-height:1.7;">HIGH = EMPTY at that sensor level · LOW = water present</div>
       </div>
     </div>
 
@@ -265,23 +301,72 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <button class="btn-export" onclick="exportFullExcel()" style="border-color:var(--warn);color:var(--warn);">⬇ Full Export · All Data (.xlsx)</button>
     </div>
 
+    <!-- 1. Temperature -->
     <div class="chart-wrap">
-      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">TEMPERATURE (°C)</div>
+      <div class="chart-header">
+        <div class="chart-title">TEMPERATURE (°C)</div>
+        <div class="chart-stats">
+          <div class="stat-pill green">Inside avg <span id="stat_tInAvg">--</span> °C</div>
+          <div class="stat-pill amber">Outside avg <span id="stat_tOutAvg">--</span> °C</div>
+        </div>
+      </div>
       <canvas id="chartTemp"></canvas>
     </div>
 
+    <!-- 2. Humidity -->
     <div class="chart-wrap" style="margin-top:12px;">
-      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">HUMIDITY (% RH)</div>
+      <div class="chart-header">
+        <div class="chart-title">HUMIDITY (% RH)</div>
+        <div class="chart-stats">
+          <div class="stat-pill blue">Inside avg <span id="stat_hInAvg">--</span> %</div>
+          <div class="stat-pill amber">Outside avg <span id="stat_hOutAvg">--</span> %</div>
+        </div>
+      </div>
       <canvas id="chartHum"></canvas>
     </div>
 
+    <!-- 3. MQ135 -->
     <div class="chart-wrap" style="margin-top:12px;">
-      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">MQ135 AIR QUALITY (raw ADC)</div>
+      <div class="chart-header">
+        <div class="chart-title">MQ135 AIR QUALITY (raw ADC)</div>
+        <div class="chart-stats">
+          <div class="stat-pill green">Inside avg <span id="stat_mqInAvg">--</span></div>
+          <div class="stat-pill amber">Outside avg <span id="stat_mqOutAvg">--</span></div>
+        </div>
+      </div>
       <canvas id="chartMQ"></canvas>
     </div>
 
+    <!-- 4. Humidifier square-wave — REAL-TIME EVENTS ══════ -->
+    <div class="chart-wrap chart-sq" style="margin-top:12px;">
+      <div class="chart-header">
+        <div class="chart-title">HUMIDIFIER STATE — real-time square wave (ON=1, OFF=0)</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="chart-stats">
+            <div class="stat-pill green">Total ON <span id="stat_motorTotal">--</span></div>
+            <div class="stat-pill amber">Cycles <span id="stat_motorCycles">--</span></div>
+            <div class="stat-pill blue">Avg run <span id="stat_motorAvgRun">--</span></div>
+          </div>
+          <div class="live-badge" id="motorLiveBadge" style="display:none;">
+            <div class="live-dot"></div>LIVE
+          </div>
+        </div>
+      </div>
+      <canvas id="chartMotor"></canvas>
+      <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:8px;text-align:center;">
+        Real-time events from <code>esp32/Motor/events/</code> — updates instantly on every ON/OFF transition
+      </div>
+    </div>
+
+    <!-- 5. Lux -->
     <div class="chart-wrap" style="margin-top:12px;">
-      <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted);margin-bottom:10px;letter-spacing:.12em;">LIGHT (lux) & HUMIDIFIER ON TIME (s per 15min)</div>
+      <div class="chart-header">
+        <div class="chart-title">LIGHT LEVEL (lux)</div>
+        <div class="chart-stats">
+          <div class="stat-pill amber">Max <span id="stat_luxMax">--</span> lux</div>
+          <div class="stat-pill blue">Avg <span id="stat_luxAvg">--</span> lux</div>
+        </div>
+      </div>
       <canvas id="chartLux"></canvas>
     </div>
 
@@ -289,7 +374,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
   <!-- ══ PAGE: BATCH INFO ════════════════════════════════ -->
   <div class="page" id="page-batch">
-
     <div class="section-label">// add new batch</div>
     <div class="form-card">
       <h3>New Batch Entry</h3>
@@ -310,7 +394,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div id="batchMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
     </div>
-
     <div class="section-label">// batch records</div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
       <button class="btn-export" onclick="exportBatchCSV()">⬇ Export Batch (.xlsx)</button>
@@ -319,12 +402,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <thead><tr><th>Batch ID</th><th>Spawn Type</th><th>Substrate</th><th>Spawn Date</th><th>Bags</th><th>Notes</th></tr></thead>
       <tbody id="batchTableBody"></tbody>
     </table>
-
-  </div><!-- end batch -->
+  </div>
 
   <!-- ══ PAGE: HARVEST LOG ═══════════════════════════════ -->
   <div class="page" id="page-harvest">
-
     <div class="section-label">// add harvest record</div>
     <div class="form-card">
       <h3>New Harvest Entry</h3>
@@ -342,7 +423,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div id="harvestMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
     </div>
-
     <div class="section-label">// harvest records</div>
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;">
       <button class="btn-export" onclick="exportHarvestCSV()">⬇ Export Harvest (.xlsx)</button>
@@ -351,18 +431,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <thead><tr><th>Batch ID</th><th>Flush</th><th>Harvest Date</th><th>Yield (g)</th><th>Notes</th></tr></thead>
       <tbody id="harvestTableBody"></tbody>
     </table>
-
-  </div><!-- end harvest -->
+  </div>
 
   <!-- ══ PAGE: SETTINGS ══════════════════════════════════ -->
   <div class="page" id="page-settings">
-
     <div class="section-label">// remote control</div>
     <div class="control-grid">
       <div class="ctrl-panel">
         <h3>Motor Override</h3>
         <div class="motor-btns">
-          <button class="btn-on" onclick="motorOn()">ON</button>
+          <button class="btn-on"  onclick="motorOn()">ON</button>
           <button class="btn-off" onclick="motorOff()">OFF</button>
           <button class="btn-auto" onclick="motorAuto()">Auto</button>
         </div>
@@ -378,7 +456,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div id="limMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
       </div>
     </div>
-
     <div class="section-label">// motor timing controls</div>
     <div class="control-grid">
       <div class="ctrl-panel">
@@ -391,7 +468,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
           <div class="inp-group">
             <label>Min Off (s)</label>
-            <input type="number" id="inp_minOff" placeholder="120" min="1" step="1">
+            <input type="number" id="inp_minOff" placeholder="180" min="1" step="1">
             <p class="inp-desc">Motor must rest at least this long between cycles.</p>
           </div>
         </div>
@@ -408,8 +485,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div id="maxMsg" class="ctrl-msg" style="color:var(--accent2);"></div>
       </div>
     </div>
-
-  </div><!-- end settings -->
+  </div>
 
   <div class="footer">
     <span>esp32 · mushroom-farm-dd30b · asia-southeast1</span>
@@ -431,7 +507,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.database();
 
-/* ── LOGIN ── */
+/* ── LOGIN / LOGOUT ────────────────────────────────────── */
 function login() {
   const email = document.getElementById("email").value.trim();
   const pass  = document.getElementById("password").value;
@@ -439,9 +515,20 @@ function login() {
   auth.signInWithEmailAndPassword(email, pass)
     .catch(e => { document.getElementById("loginError").innerText = e.message; });
 }
-
+function logout() {
+  if (!confirm("Log out?")) return;
+  db.ref("esp32").off();
+  stopMotorEventListener();
+  auth.signOut().then(() => {
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("loginBox").style.display  = "flex";
+    document.getElementById("email").value    = "";
+    document.getElementById("password").value = "";
+    destroyCharts();
+  });
+}
 auth.onAuthStateChanged(user => {
-  if(user) {
+  if (user) {
     document.getElementById("loginBox").style.display  = "none";
     document.getElementById("dashboard").style.display = "block";
     startListeners();
@@ -452,69 +539,70 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-/* ── MOTOR ON TRACKING ── */
-let motorOnSince = null;
+/* ── MOTOR DURATION TRACKER ────────────────────────────── */
+let motorOnSince       = null;
 let motorDurationTimer = null;
 
 function formatDuration(ms) {
-  if(ms < 0) ms = 0;
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if(h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
-  if(m > 0) return `${m}m ${String(s).padStart(2,'0')}s`;
-  return `${s}s`;
+  if (ms < 0) ms = 0;
+  const s  = Math.floor(ms / 1000);
+  const h  = Math.floor(s / 3600);
+  const m  = Math.floor((s % 3600) / 60);
+  const sc = s % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(sc).padStart(2,'0')}s`;
+  if (m > 0) return `${m}m ${String(sc).padStart(2,'0')}s`;
+  return `${sc}s`;
 }
-
 function startDurationTick() {
   clearInterval(motorDurationTimer);
   motorDurationTimer = setInterval(() => {
-    if(motorOnSince !== null) {
-      const elapsed = Date.now() - motorOnSince;
-      document.getElementById("motorDuration").innerText = formatDuration(elapsed);
-    }
+    if (motorOnSince !== null)
+      document.getElementById("motorDuration").innerText =
+        formatDuration(Date.now() - motorOnSince);
   }, 1000);
 }
+function stopDurationTick() { clearInterval(motorDurationTimer); motorDurationTimer = null; }
 
-function stopDurationTick() {
-  clearInterval(motorDurationTimer);
-  motorDurationTimer = null;
-}
-
-/* ── TANK STATE ── */
+/* ── TANK STATE ────────────────────────────────────────── */
 let tankLowVal = false, tankFullVal = false;
-
 function updateTankGraphic() {
-  let fillPct=10, statusText="--", badgeClass="", lowClass="ok", fullClass="ok", statusClass="";
-  const lowText  = tankLowVal  ? "EMPTY at sensor" : "Water present";
-  const fullText = tankFullVal ? "EMPTY at sensor" : "Water present";
-  const lc = tankLowVal  ? "empty" : "ok";
-  const fc = tankFullVal ? "empty" : "full";
-
-  if(!tankLowVal && !tankFullVal)      { fillPct=95; statusText="TANK FULL";    badgeClass="full";  statusClass="full"; }
-  else if(!tankLowVal && tankFullVal)  { fillPct=50; statusText="MID LEVEL";    badgeClass="ok";    statusClass="ok"; }
-  else if(tankLowVal  && tankFullVal)  { fillPct=5;  statusText="⚠ EMPTY";      badgeClass="empty"; statusClass="empty"; }
-  else                                  { fillPct=10; statusText="SENSOR FAULT"; badgeClass="low";   statusClass="low"; }
+  let fillPct, statusText, badgeClass, statusClass;
+  if (!tankLowVal && !tankFullVal)     { fillPct=95; statusText="TANK FULL";    badgeClass="full";  statusClass="full";  }
+  else if (!tankLowVal && tankFullVal) { fillPct=50; statusText="MID LEVEL";    badgeClass="ok";    statusClass="ok";    }
+  else if ( tankLowVal && tankFullVal) { fillPct= 5; statusText="⚠ EMPTY";      badgeClass="empty"; statusClass="empty"; }
+  else                                  { fillPct=10; statusText="SENSOR FAULT"; badgeClass="low";   statusClass="low";   }
 
   document.getElementById("tankWater").style.height = fillPct + "%";
   const badge = document.getElementById("tankBadge");
   badge.className = "tank-status-badge " + badgeClass;
-  badge.innerText = statusText;
-  const il = document.getElementById("info_tankLow");   il.innerText = lowText;  il.className = "row-val " + lc;
-  const iF = document.getElementById("info_tankFull");  iF.innerText = fullText; iF.className = "row-val " + fc;
-  const is = document.getElementById("info_tankStatus");is.innerText = statusText;is.className = "row-val " + statusClass;
+  badge.innerText  = statusText;
+
+  const lowText  = tankLowVal  ? "HIGH (empty at sensor)" : "LOW (water present)";
+  const fullText = tankFullVal ? "HIGH (empty at sensor)" : "LOW (water present)";
+  const lc = tankLowVal  ? "empty" : "ok";
+  const fc = tankFullVal ? "empty" : "full";
+  const il = document.getElementById("info_tankLow");    il.innerText=lowText;    il.className="row-val "+lc;
+  const iF = document.getElementById("info_tankFull");   iF.innerText=fullText;   iF.className="row-val "+fc;
+  const is = document.getElementById("info_tankStatus"); is.innerText=statusText; is.className="row-val "+statusClass;
 }
 
-/* ── LIVE LISTENERS ── */
+/* ── LIVE LISTENERS ────────────────────────────────────── */
 function startListeners() {
-  db.ref("esp32/SHT30/Temperature").on("value", s => { const v=s.val(); setText("val_tempIn",  v!==null?v.toFixed(1):"--"); flagCard("card_tempIn",v,15,35); markUpdate(); });
-  db.ref("esp32/SHT30/Humidity").on("value",    s => { const v=s.val(); setText("val_humIn",   v!==null?v.toFixed(1):"--"); flagCard("card_humIn",v,80,95);  markUpdate(); });
-  db.ref("esp32/SHT30_Outside/Temperature").on("value", s => { const v=s.val(); setText("val_tempOut", v!==null?v.toFixed(1):"--"); flagCard("card_tempOut",v,10,40); });
-  db.ref("esp32/SHT30_Outside/Humidity").on("value",    s => { const v=s.val(); setText("val_humOut",  v!==null?v.toFixed(1):"--"); });
-  db.ref("esp32/LUX").on("value",           s => { const v=s.val(); setText("val_lux",   v!==null?Math.round(v):"--"); });
-  db.ref("esp32/MQ135/Inside").on("value",  s => setText("val_mqIn",  s.val()!==null?s.val():"--"));
-  db.ref("esp32/MQ135/Outside").on("value", s => setText("val_mqOut", s.val()!==null?s.val():"--"));
+  db.ref("esp32/SHT30/Temperature").on("value", s => {
+    const v=s.val(); setText("val_tempIn", v!==null?v.toFixed(1):"--"); flagCard("card_tempIn",v,15,35); markUpdate();
+  });
+  db.ref("esp32/SHT30/Humidity").on("value", s => {
+    const v=s.val(); setText("val_humIn", v!==null?v.toFixed(1):"--"); flagCard("card_humIn",v,80,95); markUpdate();
+  });
+  db.ref("esp32/SHT30_Outside/Temperature").on("value", s => {
+    const v=s.val(); setText("val_tempOut", v!==null?v.toFixed(1):"--"); flagCard("card_tempOut",v,10,40);
+  });
+  db.ref("esp32/SHT30_Outside/Humidity").on("value", s => {
+    setText("val_humOut", s.val()!==null?s.val().toFixed(1):"--");
+  });
+  db.ref("esp32/LUX").on("value",          s => setText("val_lux",   s.val()!==null?Math.round(s.val()):"--"));
+  db.ref("esp32/MQ135/Inside").on("value", s => setText("val_mqIn",  s.val()!==null?s.val():"--"));
+  db.ref("esp32/MQ135/Outside").on("value",s => setText("val_mqOut", s.val()!==null?s.val():"--"));
 
   db.ref("esp32/Tank/Low").on("value",  s => { tankLowVal  = !!s.val(); updateTankGraphic(); });
   db.ref("esp32/Tank/Full").on("value", s => { tankFullVal = !!s.val(); updateTankGraphic(); });
@@ -523,29 +611,32 @@ function startListeners() {
     const on = !!s.val();
     document.getElementById("motorLabel").innerText = on ? "RUNNING" : "IDLE";
     document.getElementById("motorDot").classList.toggle("on", on);
-
-    if(on) {
-      if(motorOnSince === null) {
+    db.ref("esp32/control/manual_override").once("value", ms => {
+      const ov = !!ms.val();
+      if (ov)             document.getElementById("motorModeLabel").innerText = on ? "🟡 manual override · ON" : "🟡 manual override · OFF";
+      else if (tankLowVal) document.getElementById("motorModeLabel").innerText = "⚠ tank empty — motor locked OFF";
+      else                 document.getElementById("motorModeLabel").innerText = "auto mode · relay active-low · pin 25";
+    });
+    if (on) {
+      if (motorOnSince === null) {
         motorOnSince = Date.now();
         const now = new Date();
-        document.getElementById("motorLastOn").innerText =
-          now.toLocaleDateString() + "  " + now.toLocaleTimeString();
+        document.getElementById("motorLastOn").innerText = now.toLocaleDateString()+"  "+now.toLocaleTimeString();
         document.getElementById("motorDuration").innerText = "0s";
         startDurationTick();
       }
     } else {
-      if(motorOnSince !== null) {
+      if (motorOnSince !== null) {
         const elapsed = Date.now() - motorOnSince;
-        document.getElementById("motorDuration").innerText = formatDuration(elapsed) + " (last run)";
+        document.getElementById("motorDuration").innerText = formatDuration(elapsed)+" (last run)";
         motorOnSince = null;
         stopDurationTick();
       }
     }
   });
 
-  db.ref("esp32/heartbeat").on("value", s => { if(s.val()!==null){ setWifi(true); resetHeartbeatTimer(); } });
+  db.ref("esp32/heartbeat").on("value", s => { if(s.val()!==null){setWifi(true);resetHeartbeatTimer();} });
 
-  /* pre-fill settings inputs */
   db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val()!==null) document.getElementById("inp_humLow").value  = s.val(); });
   db.ref("esp32/control/humidity_high").once("value", s => { if(s.val()!==null) document.getElementById("inp_humHigh").value = s.val(); });
   db.ref("esp32/control/min_run_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_minRun").value  = s.val(); });
@@ -553,374 +644,631 @@ function startListeners() {
   db.ref("esp32/control/max_run_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_maxRun").value  = s.val(); });
 }
 
-/* ── CHARTS ── */
-let chartTemp=null, chartHum=null, chartMQ=null, chartLux=null;
+/* ══════════════════════════════════════════════════════════
+   MOTOR EVENT SYSTEM
+   ══════════════════════════════════════════════════════════
+   Key design:
+   - motorEventsCache  : holds ALL loaded events for the
+     currently selected date, keyed by epochMs string
+   - motorEventListener: the active Firebase .on() handle —
+     detached and re-attached on date change
+   - On date load: fetch all existing events via .once(),
+     then attach child_added listener for new ones
+   - child_added fires for existing AND new children, so
+     we use a "loaded" flag to ignore the initial dump and
+     only react to genuinely new events after load
+   ══════════════════════════════════════════════════════════ */
 
-const chartDefaults = {
-  responsive:true,
-  plugins:{ legend:{ labels:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:11 } } } },
-  scales:{
-    x:{ ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ color:'#1e3327' } },
-    y:{ ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ color:'#1e3327' } }
+let motorEventsCache   = {};    // epochMs(str) → {state,ts,epoch,epochMs}
+let motorEventRef      = null;  // Firebase ref with date range query
+let motorListenerActive = false;
+let motorListenerDate  = "";    // date currently being listened to
+let motorLoadComplete  = false; // true once initial dump is consumed
+
+function stopMotorEventListener() {
+  if (motorEventRef && motorListenerActive) {
+    motorEventRef.off();
+    motorListenerActive = false;
+    console.log("Motor event listener detached");
   }
-};
-
-function makeChart(id, datasets) {
-  const ctx = document.getElementById(id).getContext("2d");
-  return new Chart(ctx, { type:'line', data:{ labels:[], datasets }, options: JSON.parse(JSON.stringify(chartDefaults)) });
+  motorEventsCache   = {};
+  motorLoadComplete  = false;
+  motorListenerDate  = "";
 }
 
-function initCharts() {
-  if(chartTemp) return;
-  chartTemp = makeChart("chartTemp", [
-    { label:"Inside °C",  data:[], borderColor:"#39ff8f", backgroundColor:"rgba(57,255,143,.08)", tension:.3, pointRadius:3 },
-    { label:"Outside °C", data:[], borderColor:"#ffb800", backgroundColor:"rgba(255,184,0,.05)",  tension:.3, pointRadius:3 }
-  ]);
-  chartHum = makeChart("chartHum", [
-    { label:"Inside % RH",  data:[], borderColor:"#00c9ff", backgroundColor:"rgba(0,201,255,.08)", tension:.3, pointRadius:3 },
-    { label:"Outside % RH", data:[], borderColor:"#9b59b6", backgroundColor:"rgba(155,89,182,.05)",tension:.3, pointRadius:3 }
-  ]);
-  chartMQ = makeChart("chartMQ", [
-    { label:"MQ135 Inside",  data:[], borderColor:"#ff6b6b", backgroundColor:"rgba(255,107,107,.08)", tension:.3, pointRadius:3 },
-    { label:"MQ135 Outside", data:[], borderColor:"#ffa07a", backgroundColor:"rgba(255,160,122,.05)", tension:.3, pointRadius:3 }
-  ]);
-  chartLux = makeChart("chartLux", [
-    { label:"Lux",            data:[], borderColor:"#f9ca24", backgroundColor:"rgba(249,202,36,.08)",  tension:.3, pointRadius:3, yAxisID:'y' },
-    { label:"Motor ON (s)",   data:[], borderColor:"#39ff8f", backgroundColor:"rgba(57,255,143,.06)",  tension:.3, pointRadius:3, yAxisID:'y1', borderDash:[5,3] }
-  ]);
-  chartLux.options.scales.y1 = { type:'linear', position:'right', ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } }, grid:{ drawOnChartArea:false } };
-  chartLux.update();
-}
+function startMotorEventListener(dateStr) {
+  /* Detach any existing listener first */
+  stopMotorEventListener();
+  motorListenerDate = dateStr;
 
-function loadChartData() {
-  const dateStr = document.getElementById("chartDate").value;
-  if(!dateStr) { alert("Select a date first"); return; }
+  /*
+   * Compute day boundaries as UNIX milliseconds.
+   *
+   * The ESP32 stores epochMs = epoch * 1000  (13-digit UNIX ms).
+   * We compute IST midnight by treating the date string as local
+   * time — JS Date(y,m-1,d) uses the browser's local timezone.
+   * Since the ESP32 also uses IST (UTC+5:30), this matches as
+   * long as the browser is also in IST.  For a cross-timezone
+   * deployment you would send a fixed IST offset, but for a
+   * home farm in India this is fine.
+   */
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dayStart  = new Date(y, m - 1, d).getTime();         // ms
+  const dayEnd    = new Date(y, m - 1, d + 1).getTime();     // ms
 
-  db.ref("esp32/logs/" + dateStr).once("value", snap => {
-    if(!snap.exists()) { alert("No data for " + dateStr); return; }
+  /*
+   * Use orderByKey with string boundaries.
+   * The Firebase key is the epochMs stored as a decimal string.
+   * Keys are ordered lexicographically, but because all valid
+   * UNIX-ms keys are 13 digits (until year 2286) they sort
+   * correctly.  This also avoids requiring a ".indexOn" rule
+   * for the epochMs child field.
+   */
+  motorEventRef = db.ref("esp32/Motor/events")
+    .orderByKey()
+    .startAt(String(dayStart))
+    .endAt(String(dayEnd - 1));
 
-    const raw = snap.val();
-    const keys = Object.keys(raw).sort();
+  /*
+   * Step 1: load existing events via .once() to build the
+   * baseline cache without triggering child_added for old data.
+   */
+  motorEventRef.once("value", snap => {
+    motorEventsCache = {};
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const v   = child.val();
+        /* Normalise: use the Firebase key as the canonical id */
+        const key = child.key;
+        /* Ensure epochMs is populated (back-fill from key if needed) */
+        if (!v.epochMs) v.epochMs = Number(key);
+        motorEventsCache[key] = v;
+      });
+    }
+    console.log(`Motor events loaded for ${dateStr}: ${Object.keys(motorEventsCache).length} events  dayStart=${dayStart} dayEnd=${dayEnd}`);
+    motorLoadComplete = true;
+    rebuildMotorChart(dateStr);
 
-    const labels=[], tIn=[], tOut=[], hIn=[], hOut=[], mqIn=[], mqOut=[], luxArr=[], motorArr=[];
+    /*
+     * Step 2: attach child_added for live updates.
+     * child_added fires for every existing child first, then for
+     * new ones.  Because we already populated the cache above,
+     * duplicates are silently skipped via the key check.
+     */
+    motorEventRef.on("child_added", snap => {
+      if (!motorLoadComplete) return;
+      const key = snap.key;
+      if (motorEventsCache[key]) return; /* already loaded */
 
-    keys.forEach(k => {
-      const r = raw[k];
-      labels.push(k.replace("-",":"));
-      tIn.push(r.tempIn   ?? null);
-      tOut.push(r.tempOut ?? null);
-      hIn.push(r.humIn    ?? null);
-      hOut.push(r.humOut  ?? null);
-      mqIn.push(r.mqIn    ?? null);
-      mqOut.push(r.mqOut  ?? null);
-      luxArr.push(r.lux   ?? null);
-      motorArr.push(r.motorOnS ?? null);
+      const v = snap.val();
+      if (!v.epochMs) v.epochMs = Number(key);
+      motorEventsCache[key] = v;
+      console.log(`Live motor event: ${v.state} @ ${v.ts}  key=${key}`);
+
+      if (motorListenerDate === dateStr) {
+        rebuildMotorChart(dateStr);
+      }
     });
 
-    const update = (chart, lbl, ...datasets) => {
-      chart.data.labels = lbl;
-      datasets.forEach((d,i) => chart.data.datasets[i].data = d);
-      chart.update();
-    };
-
-    update(chartTemp, labels, tIn, tOut);
-    update(chartHum,  labels, hIn, hOut);
-    update(chartMQ,   labels, mqIn, mqOut);
-    update(chartLux,  labels, luxArr, motorArr);
+    motorListenerActive = true;
+    document.getElementById("motorLiveBadge").style.display = "inline-flex";
   });
 }
 
 /* ══════════════════════════════════════════════════════════
-   EXCEL EXPORT HELPERS
+   REBUILD MOTOR CHART from motorEventsCache
    ══════════════════════════════════════════════════════════ */
+function rebuildMotorChart(dateStr) {
+  if (!chartMotor) return;
 
-/* Download a workbook as .xlsx */
-function downloadXLSX(wb, filename) {
-  const wbout = XLSX.write(wb, { bookType:"xlsx", type:"array" });
-  const blob  = new Blob([wbout], { type:"application/octet-stream" });
-  const url   = URL.createObjectURL(blob);
-  const a     = document.createElement("a");
-  a.href      = url;
-  a.download  = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-}
+  const events = Object.values(motorEventsCache)
+    .sort((a, b) => (a.epochMs || 0) - (b.epochMs || 0));
 
-/* Style a header row bold with green background */
-function styleHeader(ws, numCols) {
-  const headerStyle = { font:{ bold:true, color:{ rgb:"0A0F0D" } }, fill:{ fgColor:{ rgb:"39FF8F" } }, alignment:{ horizontal:"center" } };
-  for(let c = 0; c < numCols; c++) {
-    const cell = ws[XLSX.utils.encode_cell({ r:0, c })];
-    if(cell) cell.s = headerStyle;
+  if (events.length === 0) {
+    chartMotor.data.labels             = ["00:00", "23:59"];
+    chartMotor.data.datasets[0].data   = [0, 0];
+    chartMotor.data.datasets[1].data   = [0, 0];
+    chartMotor.update("none");
+    setText("stat_motorTotal",  "--");
+    setText("stat_motorCycles", "--");
+    setText("stat_motorAvgRun", "--");
+    return;
   }
+
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dayStart  = new Date(y, m - 1, d).getTime();
+  const dayEnd    = new Date(y, m - 1, d + 1).getTime();
+
+  const msToHHMM = ms => {
+    const dt  = new Date(ms);
+    const hh  = String(dt.getHours()).padStart(2,'0');
+    const min = String(dt.getMinutes()).padStart(2,'0');
+    const sec = String(dt.getSeconds()).padStart(2,'0');
+    return `${hh}:${min}:${sec}`;
+  };
+
+  /* Build square-wave point array */
+  const labels      = [];
+  const squareData  = [];
+  const barData     = [];
+
+  /* Start-of-day anchor at OFF */
+  labels.push(msToHHMM(dayStart));
+  squareData.push(0);
+  barData.push(null);
+
+  let totalOnMs  = 0;
+  let cycleCount = 0;
+  let prevMs     = null;
+  let prevState  = false;
+
+  events.forEach((evt, idx) => {
+    const isOn = evt.state === "ON";
+    const ms   = Number(evt.epochMs);
+
+    /* For a step chart we need two points per transition:
+       one just before (holding old state) and one at the event
+       Actually Chart.js stepped:'before' handles this — we just
+       need to push the new state at the event time. */
+    labels.push(msToHHMM(ms));
+    squareData.push(isOn ? 1 : 0);
+
+    /* Bar: duration of the preceding segment if it was ON */
+    if (prevMs !== null && prevState) {
+      totalOnMs += (ms - prevMs);
+      const dur = Math.round((ms - prevMs) / 1000);
+      barData.push(dur);
+    } else {
+      barData.push(null);
+    }
+
+    if (isOn && !prevState) cycleCount++;
+    prevMs    = ms;
+    prevState = isOn;
+  });
+
+  /* End-of-day anchor */
+  const nowMs = Math.min(Date.now(), dayEnd);
+  labels.push(msToHHMM(nowMs));
+  squareData.push(prevState ? 1 : 0);
+  if (prevState && prevMs !== null) {
+    totalOnMs += (nowMs - prevMs);
+    barData.push(Math.round((nowMs - prevMs) / 1000));
+  } else {
+    barData.push(null);
+  }
+
+  chartMotor.data.labels           = labels;
+  chartMotor.data.datasets[0].data = barData;
+  chartMotor.data.datasets[1].data = squareData;
+  chartMotor.update("none"); // "none" = no animation, instant redraw
+
+  /* Stats */
+  const totalSec = Math.round(totalOnMs / 1000);
+  const avgRun   = cycleCount > 0 ? Math.round(totalSec / cycleCount) : null;
+  setText("stat_motorTotal",  _fmtS(totalSec));
+  setText("stat_motorCycles", cycleCount > 0 ? cycleCount : "--");
+  setText("stat_motorAvgRun", _fmtS(avgRun));
 }
 
-/* Build production rows from Firebase snapshot for a single date */
+/* ══════════════════════════════════════════════════════════
+   CHARTS
+   ══════════════════════════════════════════════════════════ */
+let chartTemp=null, chartHum=null, chartMQ=null, chartMotor=null, chartLux=null;
+let chartsInited = false;
+
+const _xAxis = {
+  ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 }, maxRotation:45, autoSkip:true, maxTicksLimit:24 },
+  grid:{ color:'#1e3327' }
+};
+const _yAxis = {
+  ticks:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:10 } },
+  grid:{ color:'#1e3327' }
+};
+const _legend = { labels:{ color:'#4a7a5a', font:{ family:'Share Tech Mono', size:11 } } };
+
+function _makeLineChart(canvasId, datasets, yOverride) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels:[], datasets },
+    options: {
+      responsive: true,
+      interaction: { mode:'index', intersect:false },
+      plugins: { legend: _legend },
+      scales: { x: _xAxis, y: Object.assign({}, _yAxis, yOverride||{}) }
+    }
+  });
+}
+
+function destroyCharts() {
+  [chartTemp, chartHum, chartMQ, chartMotor, chartLux].forEach(c => { if(c) c.destroy(); });
+  chartTemp=chartHum=chartMQ=chartMotor=chartLux=null;
+  chartsInited=false;
+  stopMotorEventListener();
+}
+
+function initCharts() {
+  if (chartsInited) return;
+  chartsInited = true;
+
+  chartTemp = _makeLineChart("chartTemp", [
+    { label:"Inside °C",  data:[], borderColor:"#39ff8f", backgroundColor:"rgba(57,255,143,.08)",  tension:.3, pointRadius:2 },
+    { label:"Outside °C", data:[], borderColor:"#ffb800", backgroundColor:"rgba(255,184,0,.05)",   tension:.3, pointRadius:2 }
+  ]);
+
+  chartHum = _makeLineChart("chartHum", [
+    { label:"Inside % RH",  data:[], borderColor:"#00c9ff", backgroundColor:"rgba(0,201,255,.08)", tension:.3, pointRadius:2 },
+    { label:"Outside % RH", data:[], borderColor:"#9b59b6", backgroundColor:"rgba(155,89,182,.05)",tension:.3, pointRadius:2 }
+  ]);
+
+  chartMQ = _makeLineChart("chartMQ", [
+    { label:"MQ135 Inside",  data:[], borderColor:"#ff6b6b", backgroundColor:"rgba(255,107,107,.08)", tension:.3, pointRadius:2 },
+    { label:"MQ135 Outside", data:[], borderColor:"#ffa07a", backgroundColor:"rgba(255,160,122,.05)", tension:.3, pointRadius:2 }
+  ]);
+
+  /* ── MOTOR SQUARE WAVE ──────────────────────────────── */
+  const motorCtx = document.getElementById("chartMotor").getContext("2d");
+  chartMotor = new Chart(motorCtx, {
+    data: {
+      labels: [],
+      datasets: [
+        {
+          type: 'bar',
+          label: 'ON duration (s)',
+          data: [],
+          backgroundColor: 'rgba(57,255,143,0.10)',
+          borderColor:     'rgba(57,255,143,0.22)',
+          borderWidth: 1,
+          yAxisID: 'yRight',
+          order: 2,
+          barPercentage: 0.9,
+          categoryPercentage: 1.0
+        },
+        {
+          type: 'line',
+          label: 'State (ON=1 / OFF=0)',
+          data: [],
+          borderColor:          '#39ff8f',
+          backgroundColor:      'rgba(57,255,143,0.18)',
+          borderWidth:          2.5,
+          pointRadius:          4,
+          pointHoverRadius:     6,
+          pointBackgroundColor: '#39ff8f',
+          pointBorderColor:     '#0a0f0d',
+          pointBorderWidth:     1.5,
+          fill:    true,
+          stepped: 'before',
+          tension: 0,
+          yAxisID: 'yLeft',
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      animation: false,   /* disable animation for instant live updates */
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: _legend,
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.type === 'bar')
+                return ctx.parsed.y !== null ? `  ON: ${ctx.parsed.y}s` : '';
+              return `  State: ${ctx.parsed.y === 1 ? '🟢 ON' : '🔴 OFF'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: _xAxis,
+        yLeft: {
+          type: 'linear',
+          position: 'left',
+          min: -0.08,
+          max:  1.2,
+          ticks: {
+            color: '#4a7a5a',
+            font: { family:'Share Tech Mono', size:10 },
+            stepSize: 1,
+            callback: v => v === 1 ? 'ON' : v === 0 ? 'OFF' : ''
+          },
+          grid: { color:'#1e3327' }
+        },
+        yRight: {
+          type: 'linear',
+          position: 'right',
+          min: 0,
+          max: 3600,
+          ticks: {
+            color: '#2a4a3a',
+            font: { family:'Share Tech Mono', size:9 },
+            callback: v => v + 's'
+          },
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+
+  chartLux = _makeLineChart("chartLux", [
+    {
+      label: 'Light (lux)',
+      data: [],
+      borderColor:     '#f9ca24',
+      backgroundColor: 'rgba(249,202,36,0.10)',
+      borderWidth: 2,
+      tension: .35,
+      pointRadius: 2,
+      fill: true
+    }
+  ], {
+    ticks: {
+      color:'#4a7a5a',
+      font:{ family:'Share Tech Mono', size:10 },
+      callback: v => v + ' lx'
+    }
+  });
+}
+
+function _avg(arr) {
+  const v = arr.filter(x => x !== null && x !== undefined && !isNaN(x));
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+}
+function _sf(v, d=1) { return (v !== null && !isNaN(v)) ? (+v).toFixed(d) : '--'; }
+function _fmtS(s) {
+  if (s===null||isNaN(s)||s<0) return '--';
+  if (s < 60) return s + 's';
+  return Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
+}
+
+/* ── Main chart loader (sensor data + kicks off motor listener) ── */
+function loadChartData() {
+  const dateStr = document.getElementById("chartDate").value;
+  if (!dateStr) { alert("Select a date first"); return; }
+
+  /* Sensor data from 15-min production logs */
+  db.ref("esp32/logs/" + dateStr).once("value", snap => {
+    if (snap.exists()) {
+      const raw  = snap.val();
+      const keys = Object.keys(raw).sort();
+      const labels=[], tIn=[], tOut=[], hIn=[], hOut=[];
+      const mqIn=[], mqOut=[], luxArr=[];
+
+      keys.forEach(k => {
+        const r = raw[k];
+        labels.push(k.replace("-",":"));
+        tIn.push(r.tempIn   ?? null);
+        tOut.push(r.tempOut ?? null);
+        hIn.push(r.humIn    ?? null);
+        hOut.push(r.humOut  ?? null);
+        mqIn.push(r.mqIn    ?? null);
+        mqOut.push(r.mqOut  ?? null);
+        luxArr.push(r.lux   ?? null);
+      });
+
+      const upd = (chart, lbl, ...ds) => {
+        chart.data.labels = lbl;
+        ds.forEach((d,i) => chart.data.datasets[i].data = d);
+        chart.update();
+      };
+      upd(chartTemp, labels, tIn, tOut);
+      upd(chartHum,  labels, hIn, hOut);
+      upd(chartMQ,   labels, mqIn, mqOut);
+      upd(chartLux,  labels, luxArr);
+      computeSensorStats(tIn, tOut, hIn, hOut, mqIn, mqOut, luxArr);
+    }
+  });
+
+  /*
+   * Motor events: start a real-time listener.
+   * If the date hasn't changed, the listener is already running —
+   * startMotorEventListener() is smart enough to detach and reattach.
+   */
+  startMotorEventListener(dateStr);
+}
+
+function computeSensorStats(tIn, tOut, hIn, hOut, mqIn, mqOut, luxArr) {
+  setText("stat_tInAvg",   _sf(_avg(tIn)));
+  setText("stat_tOutAvg",  _sf(_avg(tOut)));
+  setText("stat_hInAvg",   _sf(_avg(hIn)));
+  setText("stat_hOutAvg",  _sf(_avg(hOut)));
+  setText("stat_mqInAvg",  _sf(_avg(mqIn),  0));
+  setText("stat_mqOutAvg", _sf(_avg(mqOut), 0));
+  const vLux   = luxArr.filter(v=>v!==null&&!isNaN(v));
+  const maxLux = vLux.length ? Math.round(Math.max(...vLux)) : null;
+  setText("stat_luxMax", maxLux!==null ? maxLux : '--');
+  setText("stat_luxAvg", _sf(_avg(luxArr), 0));
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXCEL EXPORT
+   ══════════════════════════════════════════════════════════ */
+function downloadXLSX(wb, filename) {
+  const out  = XLSX.write(wb, { bookType:"xlsx", type:"array" });
+  const blob = new Blob([out], { type:"application/octet-stream" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+function styleHeader(ws, n) {
+  const s = { font:{bold:true,color:{rgb:"0A0F0D"}}, fill:{fgColor:{rgb:"39FF8F"}}, alignment:{horizontal:"center"} };
+  for(let c=0;c<n;c++){ const cell=ws[XLSX.utils.encode_cell({r:0,c})]; if(cell) cell.s=s; }
+}
 function buildProductionRows(dateStr, raw) {
-  const rows = [["Timestamp","Temp Inside (°C)","Humidity Inside (%)","Temp Outside (°C)","Humidity Outside (%)","Light (lux)","MQ135 Inside (ADC)","MQ135 Outside (ADC)","Humidifier ON (sec)"]];
-  Object.keys(raw).sort().forEach(k => {
-    const r = raw[k];
-    rows.push([
-      dateStr + " " + k.replace("-",":"),
-      r.tempIn??'', r.humIn??'', r.tempOut??'', r.humOut??'',
-      r.lux??'', r.mqIn??'', r.mqOut??'', r.motorOnS??0
-    ]);
+  const rows=[["Timestamp","Temp In (°C)","Hum In (%)","Temp Out (°C)","Hum Out (%)","Light (lux)","MQ135 In","MQ135 Out","Motor ON (s)","State"]];
+  Object.keys(raw).sort().forEach(k=>{
+    const r=raw[k];
+    rows.push([dateStr+" "+k.replace("-",":"), r.tempIn??'',r.humIn??'',r.tempOut??'',r.humOut??'',r.lux??'',r.mqIn??'',r.mqOut??'',r.motorOnS??0,(r.motorOnS??0)>0?'ON':'OFF']);
   });
   return rows;
 }
-
-/* ── EXPORT: SINGLE DAY ── */
 function exportDayExcel() {
-  const dateStr = document.getElementById("chartDate").value;
-  if(!dateStr) { alert("Select a date first"); return; }
-
-  db.ref("esp32/logs/" + dateStr).once("value", snap => {
-    if(!snap.exists()) { alert("No production data for " + dateStr); return; }
-
-    const rows = buildProductionRows(dateStr, snap.val());
-    const ws   = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = [20,18,20,20,22,14,20,20,20].map(w => ({ wch:w }));
-    styleHeader(ws, rows[0].length);
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Production " + dateStr);
-    downloadXLSX(wb, "production_" + dateStr + ".xlsx");
+  const d=document.getElementById("chartDate").value;
+  if(!d){alert("Select a date first");return;}
+  db.ref("esp32/logs/"+d).once("value",snap=>{
+    if(!snap.exists()){alert("No data for "+d);return;}
+    const rows=buildProductionRows(d,snap.val());
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"]=[20,14,12,16,14,12,12,12,14,10].map(w=>({wch:w}));
+    styleHeader(ws,rows[0].length);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Production "+d);
+    downloadXLSX(wb,"production_"+d+".xlsx");
   });
 }
-
-/* ── EXPORT: FULL ALL-DATA WORKBOOK (3 sheets) ── */
 function exportFullExcel() {
-  const dateStr = document.getElementById("chartDate").value;
-
+  const d=document.getElementById("chartDate").value;
   Promise.all([
-    dateStr ? db.ref("esp32/logs/" + dateStr).once("value") : Promise.resolve(null),
+    d?db.ref("esp32/logs/"+d).once("value"):Promise.resolve(null),
     db.ref("farm/batches").once("value"),
     db.ref("farm/harvests").once("value")
-  ]).then(([prodSnap, batchSnap, harvestSnap]) => {
-
-    const wb = XLSX.utils.book_new();
-
-    /* ── Sheet 1: Production ── */
-    if(prodSnap && prodSnap.exists()) {
-      const rows = buildProductionRows(dateStr, prodSnap.val());
-      const ws   = XLSX.utils.aoa_to_sheet(rows);
-      ws["!cols"] = [20,18,20,20,22,14,20,20,20].map(w => ({ wch:w }));
-      styleHeader(ws, rows[0].length);
-      XLSX.utils.book_append_sheet(wb, ws, "Production");
+  ]).then(([pSnap,bSnap,hSnap])=>{
+    const wb=XLSX.utils.book_new();
+    if(pSnap&&pSnap.exists()){
+      const rows=buildProductionRows(d,pSnap.val());
+      const ws=XLSX.utils.aoa_to_sheet(rows);
+      ws["!cols"]=[20,14,12,16,14,12,12,12,14,10].map(w=>({wch:w}));
+      styleHeader(ws,rows[0].length);
+      XLSX.utils.book_append_sheet(wb,ws,"Production");
     } else {
-      const ws = XLSX.utils.aoa_to_sheet([["No production data", dateStr ? "for " + dateStr : "— select a date and reload"]]);
-      XLSX.utils.book_append_sheet(wb, ws, "Production");
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([["No production data",d?"for "+d:"— select a date"]]),"Production");
     }
-
-    /* ── Sheet 2: Batch Info ── */
-    const batchRows = [["Batch ID","Spawn Type","Substrate","Spawn Date","No. of Bags","Notes"]];
-    if(batchSnap && batchSnap.exists()) {
-      Object.values(batchSnap.val())
-        .sort((a,b) => (a.date??'').localeCompare(b.date??''))
-        .forEach(r => batchRows.push([r.id, r.spawn, r.substrate, r.date, r.bags, r.notes||'']));
-    }
-    const wsBatch = XLSX.utils.aoa_to_sheet(batchRows);
-    wsBatch["!cols"] = [14,16,16,14,12,30].map(w => ({ wch:w }));
-    styleHeader(wsBatch, batchRows[0].length);
-    XLSX.utils.book_append_sheet(wb, wsBatch, "Batch Info");
-
-    /* ── Sheet 3: Harvest Log ── */
-    const harvestRows = [["Batch ID","Flush No.","Harvest Date","Yield (g)","Notes"]];
-    if(harvestSnap && harvestSnap.exists()) {
-      Object.values(harvestSnap.val())
-        .sort((a,b) => (a.date??'').localeCompare(b.date??''))
-        .forEach(r => harvestRows.push([r.batchId, "Flush " + r.flush, r.date, r.yield_g, r.notes||'']));
-    }
-    const wsHarvest = XLSX.utils.aoa_to_sheet(harvestRows);
-    wsHarvest["!cols"] = [14,12,14,12,30].map(w => ({ wch:w }));
-    styleHeader(wsHarvest, harvestRows[0].length);
-    XLSX.utils.book_append_sheet(wb, wsHarvest, "Harvest Log");
-
-    const fname = "mushroom_farm_export_" + new Date().toISOString().split("T")[0] + ".xlsx";
-    downloadXLSX(wb, fname);
-  }).catch(err => alert("Export failed: " + err.message));
+    const br=[["Batch ID","Spawn Type","Substrate","Spawn Date","No. of Bags","Notes"]];
+    if(bSnap&&bSnap.exists()) Object.values(bSnap.val()).sort((a,b)=>(a.date??'').localeCompare(b.date??'')).forEach(r=>br.push([r.id,r.spawn,r.substrate,r.date,r.bags,r.notes||'']));
+    const wsBatch=XLSX.utils.aoa_to_sheet(br); wsBatch["!cols"]=[14,16,16,14,12,30].map(w=>({wch:w})); styleHeader(wsBatch,br[0].length);
+    XLSX.utils.book_append_sheet(wb,wsBatch,"Batch Info");
+    const hr=[["Batch ID","Flush No.","Harvest Date","Yield (g)","Notes"]];
+    if(hSnap&&hSnap.exists()) Object.values(hSnap.val()).sort((a,b)=>(a.date??'').localeCompare(b.date??'')).forEach(r=>hr.push([r.batchId,"Flush "+r.flush,r.date,r.yield_g,r.notes||'']));
+    const wsH=XLSX.utils.aoa_to_sheet(hr); wsH["!cols"]=[14,12,14,12,30].map(w=>({wch:w})); styleHeader(wsH,hr[0].length);
+    XLSX.utils.book_append_sheet(wb,wsH,"Harvest Log");
+    downloadXLSX(wb,"mushroom_farm_export_"+new Date().toISOString().split("T")[0]+".xlsx");
+  }).catch(e=>alert("Export failed: "+e.message));
 }
 
-/* ── BATCH CRUD ── */
+/* ── BATCH CRUD ─────────────────────────────────────────── */
 function saveBatch() {
-  const id        = document.getElementById("b_id").value.trim();
-  const spawn     = document.getElementById("b_spawn").value.trim();
-  const substrate = document.getElementById("b_substrate").value.trim();
-  const date      = document.getElementById("b_date").value;
-  const bags      = parseInt(document.getElementById("b_bags").value);
-  const notes     = document.getElementById("b_notes").value.trim();
-
-  if(!id||!spawn||!substrate||!date||isNaN(bags)) { showMsg("batchMsg","Fill all required fields"); return; }
-
-  const record = { id, spawn, substrate, date, bags, notes, createdAt: new Date().toISOString() };
-
-  db.ref("farm/batches/" + id).set(record)
-    .then(() => {
-      showMsg("batchMsg","✓ Batch " + id + " saved");
-      ["b_id","b_spawn","b_substrate","b_date","b_bags","b_notes"].forEach(f => document.getElementById(f).value="");
-      loadBatchTable();
-    })
-    .catch(err => showMsg("batchMsg","✗ " + err.message));
+  const id=document.getElementById("b_id").value.trim(),spawn=document.getElementById("b_spawn").value.trim(),substrate=document.getElementById("b_substrate").value.trim(),date=document.getElementById("b_date").value,bags=parseInt(document.getElementById("b_bags").value),notes=document.getElementById("b_notes").value.trim();
+  if(!id||!spawn||!substrate||!date||isNaN(bags)){showMsg("batchMsg","✗ Fill all required fields");return;}
+  db.ref("farm/batches/"+id).set({id,spawn,substrate,date,bags,notes,createdAt:new Date().toISOString()})
+    .then(()=>{showMsg("batchMsg","✓ Batch "+id+" saved");["b_id","b_spawn","b_substrate","b_date","b_bags","b_notes"].forEach(f=>document.getElementById(f).value="");loadBatchTable();})
+    .catch(e=>showMsg("batchMsg","✗ "+e.message));
 }
-
 function loadBatchTable() {
-  db.ref("farm/batches").once("value", snap => {
-    const tbody = document.getElementById("batchTableBody");
-    tbody.innerHTML = "";
-    if(!snap.exists()) return;
-    Object.values(snap.val()).sort((a,b)=>b.createdAt?.localeCompare(a.createdAt??'')??0).forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td><span class="badge badge-spawn">${r.id}</span></td><td>${r.spawn}</td><td>${r.substrate}</td><td>${r.date}</td><td>${r.bags}</td><td>${r.notes||'—'}</td>`;
+  db.ref("farm/batches").once("value",snap=>{
+    const tbody=document.getElementById("batchTableBody"); tbody.innerHTML="";
+    if(!snap.exists())return;
+    Object.values(snap.val()).sort((a,b)=>(b.createdAt??'').localeCompare(a.createdAt??'')).forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td><span class="badge badge-spawn">${r.id}</span></td><td>${r.spawn}</td><td>${r.substrate}</td><td>${r.date}</td><td>${r.bags}</td><td>${r.notes||'—'}</td>`;
       tbody.appendChild(tr);
     });
   });
 }
-
-/* ── EXPORT: BATCH ONLY ── */
 function exportBatchCSV() {
-  db.ref("farm/batches").once("value", snap => {
-    if(!snap.exists()) { alert("No batch records found"); return; }
-    const rows = [["Batch ID","Spawn Type","Substrate","Spawn Date","No. of Bags","Notes"]];
-    Object.values(snap.val())
-      .sort((a,b) => (a.date??'').localeCompare(b.date??''))
-      .forEach(r => rows.push([r.id, r.spawn, r.substrate, r.date, r.bags, r.notes||'']));
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = [14,16,16,14,12,30].map(w => ({ wch:w }));
-    styleHeader(ws, rows[0].length);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Batch Info");
-    downloadXLSX(wb, "batch_info.xlsx");
+  db.ref("farm/batches").once("value",snap=>{
+    if(!snap.exists()){alert("No batch records");return;}
+    const rows=[["Batch ID","Spawn Type","Substrate","Spawn Date","No. of Bags","Notes"]];
+    Object.values(snap.val()).sort((a,b)=>(a.date??'').localeCompare(b.date??'')).forEach(r=>rows.push([r.id,r.spawn,r.substrate,r.date,r.bags,r.notes||'']));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws["!cols"]=[14,16,16,14,12,30].map(w=>({wch:w})); styleHeader(ws,rows[0].length);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Batch Info"); downloadXLSX(wb,"batch_info.xlsx");
   });
 }
 
-/* ── HARVEST CRUD ── */
+/* ── HARVEST CRUD ───────────────────────────────────────── */
 function saveHarvest() {
-  const batchId = document.getElementById("h_batchId").value.trim();
-  const flush   = parseInt(document.getElementById("h_flush").value);
-  const date    = document.getElementById("h_date").value;
-  const yield_g = parseFloat(document.getElementById("h_yield").value);
-  const notes   = document.getElementById("h_notes").value.trim();
-
-  if(!batchId||isNaN(flush)||!date||isNaN(yield_g)) { showMsg("harvestMsg","Fill all required fields"); return; }
-
-  const key    = batchId + "_F" + flush;
-  const record = { batchId, flush, date, yield_g, notes, createdAt: new Date().toISOString() };
-
-  db.ref("farm/harvests/" + key).set(record)
-    .then(() => {
-      showMsg("harvestMsg","✓ Harvest saved");
-      ["h_batchId","h_flush","h_date","h_yield","h_notes"].forEach(f => document.getElementById(f).value="");
-      loadHarvestTable();
-    })
-    .catch(err => showMsg("harvestMsg","✗ " + err.message));
+  const batchId=document.getElementById("h_batchId").value.trim(),flush=parseInt(document.getElementById("h_flush").value),date=document.getElementById("h_date").value,yield_g=parseFloat(document.getElementById("h_yield").value),notes=document.getElementById("h_notes").value.trim();
+  if(!batchId||isNaN(flush)||!date||isNaN(yield_g)){showMsg("harvestMsg","✗ Fill all required fields");return;}
+  db.ref("farm/harvests/"+batchId+"_F"+flush).set({batchId,flush,date,yield_g,notes,createdAt:new Date().toISOString()})
+    .then(()=>{showMsg("harvestMsg","✓ Harvest saved");["h_batchId","h_flush","h_date","h_yield","h_notes"].forEach(f=>document.getElementById(f).value="");loadHarvestTable();})
+    .catch(e=>showMsg("harvestMsg","✗ "+e.message));
 }
-
 function loadHarvestTable() {
-  db.ref("farm/harvests").once("value", snap => {
-    const tbody = document.getElementById("harvestTableBody");
-    tbody.innerHTML = "";
-    if(!snap.exists()) return;
-    Object.values(snap.val()).sort((a,b)=>b.date?.localeCompare(a.date??'')??0).forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td><span class="badge badge-harvest">${r.batchId}</span></td><td>Flush ${r.flush}</td><td>${r.date}</td><td>${r.yield_g} g</td><td>${r.notes||'—'}</td>`;
+  db.ref("farm/harvests").once("value",snap=>{
+    const tbody=document.getElementById("harvestTableBody"); tbody.innerHTML="";
+    if(!snap.exists())return;
+    Object.values(snap.val()).sort((a,b)=>(b.date??'').localeCompare(a.date??'')).forEach(r=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td><span class="badge badge-harvest">${r.batchId}</span></td><td>Flush ${r.flush}</td><td>${r.date}</td><td>${r.yield_g} g</td><td>${r.notes||'—'}</td>`;
       tbody.appendChild(tr);
     });
   });
 }
-
-/* ── EXPORT: HARVEST ONLY ── */
 function exportHarvestCSV() {
-  db.ref("farm/harvests").once("value", snap => {
-    if(!snap.exists()) { alert("No harvest records found"); return; }
-    const rows = [["Batch ID","Flush No.","Harvest Date","Yield (g)","Notes"]];
-    Object.values(snap.val())
-      .sort((a,b) => (a.date??'').localeCompare(b.date??''))
-      .forEach(r => rows.push([r.batchId, "Flush " + r.flush, r.date, r.yield_g, r.notes||'']));
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"] = [14,12,14,12,30].map(w => ({ wch:w }));
-    styleHeader(ws, rows[0].length);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Harvest Log");
-    downloadXLSX(wb, "harvest_log.xlsx");
+  db.ref("farm/harvests").once("value",snap=>{
+    if(!snap.exists()){alert("No harvest records");return;}
+    const rows=[["Batch ID","Flush No.","Harvest Date","Yield (g)","Notes"]];
+    Object.values(snap.val()).sort((a,b)=>(a.date??'').localeCompare(b.date??'')).forEach(r=>rows.push([r.batchId,"Flush "+r.flush,r.date,r.yield_g,r.notes||'']));
+    const ws=XLSX.utils.aoa_to_sheet(rows); ws["!cols"]=[14,12,14,12,30].map(w=>({wch:w})); styleHeader(ws,rows[0].length);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Harvest Log"); downloadXLSX(wb,"harvest_log.xlsx");
   });
 }
 
-/* ── CONTROLS ── */
-function motorOn()   { db.ref("esp32/control").update({ manual_override:true,  manual_state:true  }); showMsg("ctrlMsg","Override → ON sent"); }
-function motorOff()  { db.ref("esp32/control").update({ manual_override:true,  manual_state:false }); showMsg("ctrlMsg","Override → OFF sent"); }
-function motorAuto() { db.ref("esp32/control").update({ manual_override:false, manual_state:false }); showMsg("ctrlMsg","Auto mode restored"); }
+/* ── CONTROLS ───────────────────────────────────────────── */
+function motorOn()   { db.ref("esp32/control").update({manual_override:true, manual_state:true });  showMsg("ctrlMsg","Override → ON sent"); }
+function motorOff()  { db.ref("esp32/control").update({manual_override:true, manual_state:false}); showMsg("ctrlMsg","Override → OFF sent"); }
+function motorAuto() { db.ref("esp32/control").update({manual_override:false,manual_state:false}); showMsg("ctrlMsg","Auto mode restored"); }
 
 function updateLimits() {
-  const low=parseFloat(document.getElementById("inp_humLow").value), high=parseFloat(document.getElementById("inp_humHigh").value);
-  if(isNaN(low)||isNaN(high)){ showMsg("limMsg","Enter valid numbers"); return; }
-  if(low>=high){ showMsg("limMsg","Low must be < High"); return; }
-  if(low<10||high>99){ showMsg("limMsg","Values 10–99%"); return; }
-  Promise.all([db.ref("esp32/control/humidity_low").set(low), db.ref("esp32/control/humidity_high").set(high)])
+  const low=parseFloat(document.getElementById("inp_humLow").value),high=parseFloat(document.getElementById("inp_humHigh").value);
+  if(isNaN(low)||isNaN(high)){showMsg("limMsg","Enter valid numbers");return;}
+  if(low>=high){showMsg("limMsg","Low must be < High");return;}
+  if(low<10||high>99){showMsg("limMsg","Values 10–99%");return;}
+  Promise.all([db.ref("esp32/control/humidity_low").set(low),db.ref("esp32/control/humidity_high").set(high)])
     .then(()=>showMsg("limMsg",`✓ ${low}% – ${high}%`)).catch(e=>showMsg("limMsg","✗ "+e.message));
 }
-
 function updateTiming() {
-  const r=parseInt(document.getElementById("inp_minRun").value), o=parseInt(document.getElementById("inp_minOff").value);
-  if(isNaN(r)||isNaN(o)||r<1||o<1){ showMsg("timMsg","Invalid values"); return; }
-  Promise.all([db.ref("esp32/control/min_run_time").set(r), db.ref("esp32/control/min_off_time").set(o)])
+  const r=parseInt(document.getElementById("inp_minRun").value),o=parseInt(document.getElementById("inp_minOff").value);
+  if(isNaN(r)||isNaN(o)||r<1||o<1){showMsg("timMsg","Invalid values");return;}
+  Promise.all([db.ref("esp32/control/min_run_time").set(r),db.ref("esp32/control/min_off_time").set(o)])
     .then(()=>showMsg("timMsg",`✓ Run ${r}s · Off ${o}s`)).catch(e=>showMsg("timMsg","✗ "+e.message));
 }
-
 function updateMaxRun() {
   const v=parseInt(document.getElementById("inp_maxRun").value);
-  if(isNaN(v)||v<10){ showMsg("maxMsg","Min 10s"); return; }
+  if(isNaN(v)||v<10){showMsg("maxMsg","Min 10s");return;}
   db.ref("esp32/control/max_run_time").set(v).then(()=>showMsg("maxMsg",`✓ Cutoff ${v}s`)).catch(e=>showMsg("maxMsg","✗ "+e.message));
 }
 
-/* ── NAV ── */
-function showPage(name) {
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-  document.getElementById("page-" + name).classList.add("active");
-  event.target.classList.add("active");
-  if(name === "production") {
+/* ── NAV ────────────────────────────────────────────────── */
+function showPage(btn, name) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  btn.classList.add("active");
+  if(name==="production"){
     initCharts();
-    if(document.getElementById("chartDate").value) loadChartData();
+    const d = document.getElementById("chartDate").value;
+    if(d) loadChartData();
   }
-  if(name === "batch")   loadBatchTable();
-  if(name === "harvest") loadHarvestTable();
+  if(name==="batch")   loadBatchTable();
+  if(name==="harvest") loadHarvestTable();
 }
 
-/* ── HELPERS ── */
-function setText(id,val){ document.getElementById(id).innerText=val; }
-
-function flagCard(id,val,warn,danger) {
-  const el=document.getElementById(id);
-  el.classList.remove("warn","alert");
+/* ── HELPERS ────────────────────────────────────────────── */
+function setText(id,val){ const el=document.getElementById(id); if(el) el.innerText=val; }
+function flagCard(id,val,warn,danger){
+  const el=document.getElementById(id); el.classList.remove("warn","alert");
   if(val===null)return;
   if(val>danger||val<(warn-10)) el.classList.add("alert");
-  else if(val>warn) el.classList.add("warn");
+  else if(val>warn)              el.classList.add("warn");
 }
-
-function showMsg(id,text) {
+function showMsg(id,text){
   const el=document.getElementById(id);
-  el.innerText=text; el.classList.add("show");
-  clearTimeout(el._t);
+  el.innerText=text; el.classList.add("show"); clearTimeout(el._t);
   el._t=setTimeout(()=>el.classList.remove("show"),3500);
 }
-
 function markUpdate(){ document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString(); }
-
 let heartbeatTimer=null;
 function resetHeartbeatTimer(){ clearTimeout(heartbeatTimer); heartbeatTimer=setTimeout(()=>setWifi(false),25000); }
 function setWifi(on){ document.getElementById("wifiStatus").className=on?"online":""; document.getElementById("wifiLabel").innerText=on?"online":"offline"; }
-
 function clockTick(){ document.getElementById("footerTime").innerText=new Date().toLocaleString(); setTimeout(clockTick,1000); }
-
 function setTodayDate(){
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("chartDate").value = today;
-  document.getElementById("b_date").value    = today;
-  document.getElementById("h_date").value    = today;
+  const t=new Date().toISOString().split("T")[0];
+  document.getElementById("chartDate").value=t;
+  document.getElementById("b_date").value=t;
+  document.getElementById("h_date").value=t;
 }
-
-
 </script>
 </body>
 </html>
