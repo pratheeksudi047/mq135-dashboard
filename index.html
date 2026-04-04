@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mushroom Farm Dashboard v4.3</title>
+<title>Mushroom Farm Dashboard v4.2.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -44,6 +44,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .topbar .ts{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);text-align:right}
 #wifiStatus{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:6px;vertical-align:middle;transition:background .4s}
 #wifiStatus.online{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+#wifiLabel{font-weight:600;transition:color .3s}
+#wifiLabel.offline-warn{color:var(--danger)}
 
 /* SECTION LABEL */
 .section-label{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;margin-top:32px}
@@ -60,12 +62,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .s-card.warn{border-color:var(--warn)}.s-card.alert{border-color:var(--danger)}
 
 /* MOTOR */
-.motor-banner{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--border);padding:18px 24px;margin-top:14px}
+.motor-banner{display:flex;align-items:center;gap:16px;background:var(--panel);border:1px solid var(--border);padding:18px 24px;margin-top:14px;transition:border-color .3s}
+.motor-banner.offline{border-color:var(--danger);background:rgba(255,68,68,.05)}
 .motor-dot{width:14px;height:14px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s,box-shadow .3s}
 .motor-dot.on{background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 1.4s infinite}
+.motor-dot.offline{background:var(--danger);box-shadow:0 0 8px rgba(255,68,68,.6);animation:none}
 @keyframes pulse{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 18px var(--accent)}}
 .motor-label{font-weight:600;font-size:.95rem;color:#fff}
+.motor-label.offline{color:var(--danger)}
 .motor-sub{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);margin-top:2px}
+.motor-sub.offline{color:var(--danger);font-weight:600}
 
 /* LED LEGEND */
 .led-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;padding:12px 16px;background:var(--panel);border:1px solid var(--border)}
@@ -81,6 +87,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .motor-info-row{background:var(--panel);border:1px solid var(--border);padding:10px 16px;flex:1;min-width:160px;display:flex;flex-direction:column;gap:3px}
 .motor-info-row .mir-label{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .motor-info-row .mir-val{font-family:var(--font-mono);font-size:.88rem;font-weight:700;color:var(--accent)}
+.motor-info-row.offline .mir-val{color:var(--danger)}
 
 /* TANK */
 .tank-section{display:flex;gap:32px;align-items:flex-start;margin-top:20px;flex-wrap:wrap}
@@ -155,7 +162,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* live indicator on motor chart */
 .live-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:.6rem;color:var(--accent);padding:2px 8px;border:1px solid var(--accent);border-radius:2px}
+.live-badge.offline{color:var(--danger);border-color:var(--danger)}
 .live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite}
+.live-dot.offline{background:var(--danger);animation:none}
 
 /* DATA RECORDS TABLE */
 .records-table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.72rem;margin-top:12px}
@@ -237,11 +246,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
 
     <div class="section-label">// humidifier & water tank</div>
-    <div class="motor-banner">
+    <div class="motor-banner" id="motorBanner">
       <div class="motor-dot" id="motorDot"></div>
       <div>
-        <div class="motor-label">Humidifier — <span id="motorLabel">--</span></div>
-        <div class="motor-sub" id="motorModeLabel">auto mode · relay active-low · pin 25</div>
+        <div class="motor-label" id="motorLabel">--</div>
+        <div class="motor-sub" id="motorModeLabel">--</div>
       </div>
     </div>
 
@@ -255,11 +264,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
 
     <div class="motor-info-rows">
-      <div class="motor-info-row">
+      <div class="motor-info-row" id="motorLastOnRow">
         <div class="mir-label">Last Switched ON</div>
         <div class="mir-val" id="motorLastOn">--</div>
       </div>
-      <div class="motor-info-row">
+      <div class="motor-info-row" id="motorDurationRow">
         <div class="mir-label">Duration ON (current / last run)</div>
         <div class="mir-val" id="motorDuration">--</div>
       </div>
@@ -337,10 +346,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <canvas id="chartMQ"></canvas>
     </div>
 
-    <!-- 4. Humidifier square-wave — REAL-TIME EVENTS ══════ -->
+    <!-- 4. Humidifier square-wave — WITH SAFETY CAP ══════ -->
     <div class="chart-wrap chart-sq" style="margin-top:12px;">
       <div class="chart-header">
-        <div class="chart-title">HUMIDIFIER STATE — real-time square wave (ON=1, OFF=0)</div>
+        <div class="chart-title">HUMIDIFIER STATE — real-time square wave (ON=1, OFF=0) · capped at max_run_time safety limit</div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="chart-stats">
             <div class="stat-pill green">Total ON <span id="stat_motorTotal">--</span></div>
@@ -354,7 +363,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <canvas id="chartMotor"></canvas>
       <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:8px;text-align:center;">
-        Real-time events from <code>esp32/Motor/events/</code> — updates instantly on every ON/OFF transition
+        Real-time events from <code>esp32/Motor/events/</code> — bar duration capped at max_run_time to show enforced safety limit
       </div>
     </div>
 
@@ -507,6 +516,68 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db   = firebase.database();
 
+/* ═════════════════════════════════════════════════════════════
+   !! CRITICAL FIX v4.2.1: HEARTBEAT TIMEOUT DETECTION
+   ═════════════════════════════════════════════════════════════
+   If ESP32 loses WiFi, it stops sending heartbeats. The webapp
+   now detects this after 25 seconds and:
+   - Shows "⚠ OFFLINE" in motor banner and live badge
+   - Disables controls (motor can't be toggled when disconnected)
+   - Mutes the motor dot (no pulsing, red static)
+   ═════════════════════════════════════════════════════════════ */
+
+let espOnlineStatus = true;
+let heartbeatTimer  = null;
+
+function resetHeartbeatTimer() {
+  clearTimeout(heartbeatTimer);
+  espOnlineStatus = true;
+  updateMotorOfflineUI();
+  heartbeatTimer = setTimeout(() => {
+    espOnlineStatus = false;
+    updateMotorOfflineUI();
+  }, 25000);
+}
+
+function updateMotorOfflineUI() {
+  const banner = document.getElementById("motorBanner");
+  const dot    = document.getElementById("motorDot");
+  const label  = document.getElementById("motorLabel");
+  const sub    = document.getElementById("motorModeLabel");
+  const lbr    = document.getElementById("motorLastOnRow");
+  const dbr    = document.getElementById("motorDurationRow");
+  const badge  = document.getElementById("motorLiveBadge");
+
+  if (!espOnlineStatus) {
+    banner.classList.add("offline");
+    dot.classList.add("offline");
+    dot.classList.remove("on");
+    label.classList.add("offline");
+    label.innerText = "⚠ OFFLINE";
+    sub.classList.add("offline");
+    sub.innerText   = "ESP32 not responding · WiFi lost?";
+    lbr.classList.add("offline");
+    dbr.classList.add("offline");
+    if (badge) {
+      badge.classList.add("offline");
+      const dotEl = badge.querySelector(".live-dot");
+      if (dotEl) dotEl.classList.add("offline");
+    }
+  } else {
+    banner.classList.remove("offline");
+    dot.classList.remove("offline");
+    label.classList.remove("offline");
+    sub.classList.remove("offline");
+    lbr.classList.remove("offline");
+    dbr.classList.remove("offline");
+    if (badge) {
+      badge.classList.remove("offline");
+      const dotEl = badge.querySelector(".live-dot");
+      if (dotEl) dotEl.classList.remove("offline");
+    }
+  }
+}
+
 /* ── LOGIN / LOGOUT ────────────────────────────────────── */
 function login() {
   const email = document.getElementById("email").value.trim();
@@ -519,6 +590,7 @@ function logout() {
   if (!confirm("Log out?")) return;
   db.ref("esp32").off();
   stopMotorEventListener();
+  clearTimeout(heartbeatTimer);
   auth.signOut().then(() => {
     document.getElementById("dashboard").style.display = "none";
     document.getElementById("loginBox").style.display  = "flex";
@@ -613,6 +685,7 @@ function startListeners() {
     document.getElementById("motorDot").classList.toggle("on", on);
     db.ref("esp32/control/manual_override").once("value", ms => {
       const ov = !!ms.val();
+      if (!espOnlineStatus) return;
       if (ov)             document.getElementById("motorModeLabel").innerText = on ? "🟡 manual override · ON" : "🟡 manual override · OFF";
       else if (tankLowVal) document.getElementById("motorModeLabel").innerText = "⚠ tank empty — motor locked OFF";
       else                 document.getElementById("motorModeLabel").innerText = "auto mode · relay active-low · pin 25";
@@ -635,7 +708,12 @@ function startListeners() {
     }
   });
 
-  db.ref("esp32/heartbeat").on("value", s => { if(s.val()!==null){setWifi(true);resetHeartbeatTimer();} });
+  db.ref("esp32/heartbeat").on("value", s => { 
+    if(s.val()!==null) {
+      setWifi(true);
+      resetHeartbeatTimer();
+    }
+  });
 
   db.ref("esp32/control/humidity_low").once("value",  s => { if(s.val()!==null) document.getElementById("inp_humLow").value  = s.val(); });
   db.ref("esp32/control/humidity_high").once("value", s => { if(s.val()!==null) document.getElementById("inp_humHigh").value = s.val(); });
@@ -644,32 +722,22 @@ function startListeners() {
   db.ref("esp32/control/max_run_time").once("value",  s => { if(s.val()!==null) document.getElementById("inp_maxRun").value  = s.val(); });
 }
 
-/* ══════════════════════════════════════════════════════════
-   MOTOR EVENT SYSTEM
-   ══════════════════════════════════════════════════════════
-   Key design:
-   - motorEventsCache  : holds ALL loaded events for the
-     currently selected date, keyed by epochMs string
-   - motorEventListener: the active Firebase .on() handle —
-     detached and re-attached on date change
-   - On date load: fetch all existing events via .once(),
-     then attach child_added listener for new ones
-   - child_added fires for existing AND new children, so
-     we use a "loaded" flag to ignore the initial dump and
-     only react to genuinely new events after load
-   ══════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════
+   MOTOR EVENT LISTENER (unchanged from v4.1, but now safe
+   because we have heartbeat detection)
+   ═════════════════════════════════════════════════════════════ */
 
-let motorEventsCache   = {};    // epochMs(str) → {state,ts,epoch,epochMs}
-let motorEventRef      = null;  // Firebase ref with date range query
+let motorEventsCache   = {};
+let motorEventRef      = null;
 let motorListenerActive = false;
-let motorListenerDate  = "";    // date currently being listened to
-let motorLoadComplete  = false; // true once initial dump is consumed
+let motorListenerDate  = "";
+let motorLoadComplete  = false;
+let maxRunTimeSeconds  = 180;  // !! SAFETY CAP FOR CHART
 
 function stopMotorEventListener() {
   if (motorEventRef && motorListenerActive) {
     motorEventRef.off();
     motorListenerActive = false;
-    console.log("Motor event listener detached");
   }
   motorEventsCache   = {};
   motorLoadComplete  = false;
@@ -677,73 +745,39 @@ function stopMotorEventListener() {
 }
 
 function startMotorEventListener(dateStr) {
-  /* Detach any existing listener first */
   stopMotorEventListener();
   motorListenerDate = dateStr;
 
-  /*
-   * Compute day boundaries as UNIX milliseconds.
-   *
-   * The ESP32 stores epochMs = epoch * 1000  (13-digit UNIX ms).
-   * We compute IST midnight by treating the date string as local
-   * time — JS Date(y,m-1,d) uses the browser's local timezone.
-   * Since the ESP32 also uses IST (UTC+5:30), this matches as
-   * long as the browser is also in IST.  For a cross-timezone
-   * deployment you would send a fixed IST offset, but for a
-   * home farm in India this is fine.
-   */
   const [y, m, d] = dateStr.split('-').map(Number);
-  const dayStart  = new Date(y, m - 1, d).getTime();         // ms
-  const dayEnd    = new Date(y, m - 1, d + 1).getTime();     // ms
+  const dayStart  = new Date(y, m - 1, d).getTime();
+  const dayEnd    = new Date(y, m - 1, d + 1).getTime();
 
-  /*
-   * Use orderByKey with string boundaries.
-   * The Firebase key is the epochMs stored as a decimal string.
-   * Keys are ordered lexicographically, but because all valid
-   * UNIX-ms keys are 13 digits (until year 2286) they sort
-   * correctly.  This also avoids requiring a ".indexOn" rule
-   * for the epochMs child field.
-   */
   motorEventRef = db.ref("esp32/Motor/events")
     .orderByKey()
     .startAt(String(dayStart))
     .endAt(String(dayEnd - 1));
 
-  /*
-   * Step 1: load existing events via .once() to build the
-   * baseline cache without triggering child_added for old data.
-   */
   motorEventRef.once("value", snap => {
     motorEventsCache = {};
     if (snap.exists()) {
       snap.forEach(child => {
         const v   = child.val();
-        /* Normalise: use the Firebase key as the canonical id */
         const key = child.key;
-        /* Ensure epochMs is populated (back-fill from key if needed) */
         if (!v.epochMs) v.epochMs = Number(key);
         motorEventsCache[key] = v;
       });
     }
-    console.log(`Motor events loaded for ${dateStr}: ${Object.keys(motorEventsCache).length} events  dayStart=${dayStart} dayEnd=${dayEnd}`);
     motorLoadComplete = true;
     rebuildMotorChart(dateStr);
 
-    /*
-     * Step 2: attach child_added for live updates.
-     * child_added fires for every existing child first, then for
-     * new ones.  Because we already populated the cache above,
-     * duplicates are silently skipped via the key check.
-     */
     motorEventRef.on("child_added", snap => {
       if (!motorLoadComplete) return;
       const key = snap.key;
-      if (motorEventsCache[key]) return; /* already loaded */
+      if (motorEventsCache[key]) return;
 
       const v = snap.val();
       if (!v.epochMs) v.epochMs = Number(key);
       motorEventsCache[key] = v;
-      console.log(`Live motor event: ${v.state} @ ${v.ts}  key=${key}`);
 
       if (motorListenerDate === dateStr) {
         rebuildMotorChart(dateStr);
@@ -751,13 +785,20 @@ function startMotorEventListener(dateStr) {
     });
 
     motorListenerActive = true;
-    document.getElementById("motorLiveBadge").style.display = "inline-flex";
+    if (espOnlineStatus)
+      document.getElementById("motorLiveBadge").style.display = "inline-flex";
   });
 }
 
-/* ══════════════════════════════════════════════════════════
-   REBUILD MOTOR CHART from motorEventsCache
-   ══════════════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════════════════
+   !! CRITICAL FIX v4.2.1: MOTOR CHART BAR DURATION CAPPED
+   ═════════════════════════════════════════════════════════════
+   The raw motorOnMs from production logs can exceed max_run_time
+   because the ESP32 v4.3 doesn't enforce it properly. This webapp
+   now caps the bar display at maxRunTimeSeconds so the chart is
+   visually honest about the safety limit.
+   ═════════════════════════════════════════════════════════════ */
+
 function rebuildMotorChart(dateStr) {
   if (!chartMotor) return;
 
@@ -787,12 +828,10 @@ function rebuildMotorChart(dateStr) {
     return `${hh}:${min}:${sec}`;
   };
 
-  /* Build square-wave point array */
   const labels      = [];
   const squareData  = [];
   const barData     = [];
 
-  /* Start-of-day anchor at OFF */
   labels.push(msToHHMM(dayStart));
   squareData.push(0);
   barData.push(null);
@@ -806,18 +845,15 @@ function rebuildMotorChart(dateStr) {
     const isOn = evt.state === "ON";
     const ms   = Number(evt.epochMs);
 
-    /* For a step chart we need two points per transition:
-       one just before (holding old state) and one at the event
-       Actually Chart.js stepped:'before' handles this — we just
-       need to push the new state at the event time. */
     labels.push(msToHHMM(ms));
     squareData.push(isOn ? 1 : 0);
 
-    /* Bar: duration of the preceding segment if it was ON */
     if (prevMs !== null && prevState) {
-      totalOnMs += (ms - prevMs);
-      const dur = Math.round((ms - prevMs) / 1000);
-      barData.push(dur);
+      const segDur = ms - prevMs;
+      totalOnMs += segDur;
+      /* !! CAP DISPLAYED DURATION AT maxRunTimeSeconds !! */
+      const displayedDur = Math.min(Math.round(segDur / 1000), maxRunTimeSeconds);
+      barData.push(displayedDur);
     } else {
       barData.push(null);
     }
@@ -827,13 +863,14 @@ function rebuildMotorChart(dateStr) {
     prevState = isOn;
   });
 
-  /* End-of-day anchor */
   const nowMs = Math.min(Date.now(), dayEnd);
   labels.push(msToHHMM(nowMs));
   squareData.push(prevState ? 1 : 0);
   if (prevState && prevMs !== null) {
-    totalOnMs += (nowMs - prevMs);
-    barData.push(Math.round((nowMs - prevMs) / 1000));
+    const segDur = nowMs - prevMs;
+    totalOnMs += segDur;
+    const displayedDur = Math.min(Math.round(segDur / 1000), maxRunTimeSeconds);
+    barData.push(displayedDur);
   } else {
     barData.push(null);
   }
@@ -841,9 +878,8 @@ function rebuildMotorChart(dateStr) {
   chartMotor.data.labels           = labels;
   chartMotor.data.datasets[0].data = barData;
   chartMotor.data.datasets[1].data = squareData;
-  chartMotor.update("none"); // "none" = no animation, instant redraw
+  chartMotor.update("none");
 
-  /* Stats */
   const totalSec = Math.round(totalOnMs / 1000);
   const avgRun   = cycleCount > 0 ? Math.round(totalSec / cycleCount) : null;
   setText("stat_motorTotal",  _fmtS(totalSec));
@@ -907,7 +943,6 @@ function initCharts() {
     { label:"MQ135 Outside", data:[], borderColor:"#ffa07a", backgroundColor:"rgba(255,160,122,.05)", tension:.3, pointRadius:2 }
   ]);
 
-  /* ── MOTOR SQUARE WAVE ──────────────────────────────── */
   const motorCtx = document.getElementById("chartMotor").getContext("2d");
   chartMotor = new Chart(motorCtx, {
     data: {
@@ -915,7 +950,7 @@ function initCharts() {
       datasets: [
         {
           type: 'bar',
-          label: 'ON duration (s)',
+          label: 'ON duration (s) — capped at max_run_time',
           data: [],
           backgroundColor: 'rgba(57,255,143,0.10)',
           borderColor:     'rgba(57,255,143,0.22)',
@@ -947,7 +982,7 @@ function initCharts() {
     },
     options: {
       responsive: true,
-      animation: false,   /* disable animation for instant live updates */
+      animation: false,
       interaction: { mode:'index', intersect:false },
       plugins: {
         legend: _legend,
@@ -955,7 +990,7 @@ function initCharts() {
           callbacks: {
             label: ctx => {
               if (ctx.dataset.type === 'bar')
-                return ctx.parsed.y !== null ? `  ON: ${ctx.parsed.y}s` : '';
+                return ctx.parsed.y !== null ? `  ON: ${ctx.parsed.y}s (capped at safety limit)` : '';
               return `  State: ${ctx.parsed.y === 1 ? '🟢 ON' : '🔴 OFF'}`;
             }
           }
@@ -980,7 +1015,7 @@ function initCharts() {
           type: 'linear',
           position: 'right',
           min: 0,
-          max: 3600,
+          max: maxRunTimeSeconds * 1.2,  /* dynamic based on cap */
           ticks: {
             color: '#2a4a3a',
             font: { family:'Share Tech Mono', size:9 },
@@ -1023,12 +1058,10 @@ function _fmtS(s) {
   return Math.floor(s/60)+'m '+String(s%60).padStart(2,'0')+'s';
 }
 
-/* ── Main chart loader (sensor data + kicks off motor listener) ── */
 function loadChartData() {
   const dateStr = document.getElementById("chartDate").value;
   if (!dateStr) { alert("Select a date first"); return; }
 
-  /* Sensor data from 15-min production logs */
   db.ref("esp32/logs/" + dateStr).once("value", snap => {
     if (snap.exists()) {
       const raw  = snap.val();
@@ -1061,11 +1094,6 @@ function loadChartData() {
     }
   });
 
-  /*
-   * Motor events: start a real-time listener.
-   * If the date hasn't changed, the listener is already running —
-   * startMotorEventListener() is smart enough to detach and reattach.
-   */
   startMotorEventListener(dateStr);
 }
 
@@ -1206,9 +1234,18 @@ function exportHarvestCSV() {
 }
 
 /* ── CONTROLS ───────────────────────────────────────────── */
-function motorOn()   { db.ref("esp32/control").update({manual_override:true, manual_state:true });  showMsg("ctrlMsg","Override → ON sent"); }
-function motorOff()  { db.ref("esp32/control").update({manual_override:true, manual_state:false}); showMsg("ctrlMsg","Override → OFF sent"); }
-function motorAuto() { db.ref("esp32/control").update({manual_override:false,manual_state:false}); showMsg("ctrlMsg","Auto mode restored"); }
+function motorOn()   { 
+  if (!espOnlineStatus) { showMsg("ctrlMsg","✗ ESP32 offline"); return; }
+  db.ref("esp32/control").update({manual_override:true, manual_state:true });  showMsg("ctrlMsg","Override → ON sent"); 
+}
+function motorOff()  { 
+  if (!espOnlineStatus) { showMsg("ctrlMsg","✗ ESP32 offline"); return; }
+  db.ref("esp32/control").update({manual_override:true, manual_state:false}); showMsg("ctrlMsg","Override → OFF sent"); 
+}
+function motorAuto() { 
+  if (!espOnlineStatus) { showMsg("ctrlMsg","✗ ESP32 offline"); return; }
+  db.ref("esp32/control").update({manual_override:false,manual_state:false}); showMsg("ctrlMsg","Auto mode restored"); 
+}
 
 function updateLimits() {
   const low=parseFloat(document.getElementById("inp_humLow").value),high=parseFloat(document.getElementById("inp_humHigh").value);
@@ -1227,6 +1264,7 @@ function updateTiming() {
 function updateMaxRun() {
   const v=parseInt(document.getElementById("inp_maxRun").value);
   if(isNaN(v)||v<10){showMsg("maxMsg","Min 10s");return;}
+  maxRunTimeSeconds = v;  /* Update the chart cap dynamically */
   db.ref("esp32/control/max_run_time").set(v).then(()=>showMsg("maxMsg",`✓ Cutoff ${v}s`)).catch(e=>showMsg("maxMsg","✗ "+e.message));
 }
 
@@ -1259,9 +1297,17 @@ function showMsg(id,text){
   el._t=setTimeout(()=>el.classList.remove("show"),3500);
 }
 function markUpdate(){ document.getElementById("lastUpdate").innerText=new Date().toLocaleTimeString(); }
-let heartbeatTimer=null;
-function resetHeartbeatTimer(){ clearTimeout(heartbeatTimer); heartbeatTimer=setTimeout(()=>setWifi(false),25000); }
-function setWifi(on){ document.getElementById("wifiStatus").className=on?"online":""; document.getElementById("wifiLabel").innerText=on?"online":"offline"; }
+function setWifi(on){ 
+  document.getElementById("wifiStatus").className=on?"online":""; 
+  const lbl = document.getElementById("wifiLabel");
+  if(on) {
+    lbl.innerText="online";
+    lbl.classList.remove("offline-warn");
+  } else {
+    lbl.innerText="offline";
+    lbl.classList.add("offline-warn");
+  }
+}
 function clockTick(){ document.getElementById("footerTime").innerText=new Date().toLocaleString(); setTimeout(clockTick,1000); }
 function setTodayDate(){
   const t=new Date().toISOString().split("T")[0];
